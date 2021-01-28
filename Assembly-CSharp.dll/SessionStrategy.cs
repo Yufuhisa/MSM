@@ -231,8 +231,18 @@ public class SessionStrategy : InstanceCounter
 					CarPart carPart = this.mVehicle.car.seriesCurrentParts[i];
 					if (carPart.partCondition.condition <= 0.1f)
 					{
-						this.mReasonForPreviousPit = SessionStints.ReasonForStint.PitConditionFix;
-						return true;
+						// most part types cant be repaired
+						switch (carPart.GetPartType())
+                        {
+							case CarPart.PartType.Engine:
+							case CarPart.PartType.Brakes:
+							case CarPart.PartType.Gearbox:
+							case CarPart.PartType.Suspension:
+								break;
+							default:
+								this.mReasonForPreviousPit = SessionStints.ReasonForStint.PitConditionFix;
+								return true;
+						}
 					}
 				}
 			}
@@ -560,7 +570,7 @@ public class SessionStrategy : InstanceCounter
 		switch (this.mStatus)
 		{
 		case SessionStrategy.Status.NoActionRequired:
-		{
+			{
 			SessionDetails.SessionType sessionType = Game.instance.sessionManager.eventDetails.currentSession.sessionType;
 			if (sessionType != SessionDetails.SessionType.Race && this.mVehicle.isPlayerDriver && !Game.instance.sessionManager.isUsingAIForPlayerDrivers && (this.mVehicle.performance.fuel.IsOutOfFuel() || this.HasCompletedOrderedLapCount()))
 			{
@@ -571,7 +581,7 @@ public class SessionStrategy : InstanceCounter
 				this.mVehicle.strategy.ReturnToGarage();
 			}
 			break;
-		}
+			}
 		case SessionStrategy.Status.Pitting:
 			if (Game.instance.sessionManager.flag == SessionManager.Flag.Chequered)
 			{
@@ -769,7 +779,13 @@ public class SessionStrategy : InstanceCounter
 					break;
 				}
 			}
-			else if (this.mVehicle.performance.carConditionPerformance.LikelyToNeedRepairByDistance(carPart.GetPartType()) || carPart.partCondition.condition <= 0.1f)
+			else if (
+				(this.mVehicle.performance.carConditionPerformance.LikelyToNeedRepairByDistance(carPart.GetPartType()) || carPart.partCondition.condition <= 0.1f)
+				&& carPart.GetPartType() != CarPart.PartType.Engine
+				&& carPart.GetPartType() != CarPart.PartType.Brakes
+				&& carPart.GetPartType() != CarPart.PartType.Gearbox
+				&& carPart.GetPartType() != CarPart.PartType.Suspension
+				)
 			{
 				carPart.partCondition.SetRepairInPit(true);
 				flag = true;
