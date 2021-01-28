@@ -110,7 +110,7 @@ public class RaceDirector : InstanceCounter
 			if (racingVehicle.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart)
 			{
 				racingVehicle.car.OnCollision(CarPart.PartType.FrontWing);
-				if (!racingVehicle.behaviourManager.isOutOfRace)
+				if (!racingVehicle.behaviourManager.isOutOfRace || RandomUtility.GetRandom01() < 0.02f)
 				{
 					this.mPenaltyDirector.ApplyPenaltyIfViable(racingVehicle, Penalty.PenaltyCause.Collision);
 				}
@@ -132,7 +132,7 @@ public class RaceDirector : InstanceCounter
 			if (racingVehicle.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart)
 			{
 				racingVehicle.car.OnCollision(CarPart.PartType.RearWing);
-				if (!racingVehicle.behaviourManager.isOutOfRace)
+				if (!racingVehicle.behaviourManager.isOutOfRace || RandomUtility.GetRandom01() < 0.02f)
 				{
 					this.mPenaltyDirector.ApplyPenaltyIfViable(racingVehicle, Penalty.PenaltyCause.Collision);
 				}
@@ -173,26 +173,26 @@ public class RaceDirector : InstanceCounter
 	{
 		switch (inVehicle.pathController.GetCurrentPath().pathType)
 		{
-		case PathController.PathType.Pitlane:
-		case PathController.PathType.PitlaneEntry:
-		case PathController.PathType.PitlaneExit:
-		case PathController.PathType.PitboxEntry:
-		case PathController.PathType.PitboxExit:
-		case PathController.PathType.GarageEntry:
-		case PathController.PathType.GarageExit:
-		case PathController.PathType.CrashLane:
-		case PathController.PathType.RunWideLane:
-		case PathController.PathType.CutCornerLane:
-			return false;
-		default:
-			switch (inVehicle.behaviourManager.currentBehaviour.behaviourType)
-			{
-			case AIBehaviourStateManager.Behaviour.Crashing:
-			case AIBehaviourStateManager.Behaviour.TyreLockUp:
-			case AIBehaviourStateManager.Behaviour.Spin:
+			case PathController.PathType.Pitlane:
+			case PathController.PathType.PitlaneEntry:
+			case PathController.PathType.PitlaneExit:
+			case PathController.PathType.PitboxEntry:
+			case PathController.PathType.PitboxExit:
+			case PathController.PathType.GarageEntry:
+			case PathController.PathType.GarageExit:
+			case PathController.PathType.CrashLane:
+			case PathController.PathType.RunWideLane:
+			case PathController.PathType.CutCornerLane:
+				return false;
+			default:
+				switch (inVehicle.behaviourManager.currentBehaviour.behaviourType)
+				{
+					case AIBehaviourStateManager.Behaviour.Crashing:
+					case AIBehaviourStateManager.Behaviour.TyreLockUp:
+					case AIBehaviourStateManager.Behaviour.Spin:
+						return false;
+				}
 				return true;
-			}
-			return false;
 		}
 	}
 

@@ -248,7 +248,7 @@ public class Vehicle : InstanceCounter
 							zero.x += collisionResult.collisionResponse.x;
 							zero.z += collisionResult.collisionResponse.y;
 							float num2 = Math.Abs(collisionResult.collisionResponse.x) + Math.Abs(collisionResult.collisionResponse.y);
-							if (this.mCollisionCooldown <= 0f && (num2 > 0.2f || (num2 > 0.1f && RandomUtility.GetRandom01() > 0.8f)))
+							if (this.mCollisionCooldown <= 0f && (num2 > 0.9f || (num2 > 0.8f && RandomUtility.GetRandom01() > 0.8f)))
 							{
 								Game.instance.sessionManager.raceDirector.OnVehicleCollision(this, vehicle);
 								this.mCollisionCooldown = 5f;
