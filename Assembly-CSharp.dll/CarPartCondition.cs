@@ -105,8 +105,17 @@ public class CarPartCondition
 
 	public bool CanRepairInPit()
 	{
-		this.CheckRefreshPitAmount();
-		return Mathf.RoundToInt(100f * this.mCondition) < Mathf.RoundToInt(this.ClampConditionToReliability(this.mPitRepairAmount + this.mCondition) * 100f);
+		switch (this.mPart.GetPartType())
+        {
+			case CarPart.PartType.Engine:
+			case CarPart.PartType.Brakes:
+			case CarPart.PartType.Gearbox:
+			case CarPart.PartType.Suspension:
+				return false;
+			default:
+				this.CheckRefreshPitAmount();
+				return Mathf.RoundToInt(100f * this.mCondition) < Mathf.RoundToInt(this.ClampConditionToReliability(this.mPitRepairAmount + this.mCondition) * 100f);
+		}
 	}
 
 	public void SetRepairInPit(bool inRepairInPit)
@@ -178,35 +187,38 @@ public class CarPartCondition
 		return false;
 	}
 
+	// calculate possibility for spontanous breakdown
+	public float GetNextRealConditionLoss(float inCondition, CarPart.PartType inType, RacingVehicle inVehicle)
+	{
+
+		float ausfallWahrscheinlichkeit;
+
+		if (this.mPart.stats.reliability >= 0.9f)
+			ausfallWahrscheinlichkeit = 0.0013f;
+		else if (this.mPart.stats.reliability >= 0.75f)
+			ausfallWahrscheinlichkeit = 0.0013f + ((0.9f - this.mPart.stats.reliability) / 0.15f * 0.0013f);
+		else if (this.mPart.stats.reliability > 0.6f)
+			ausfallWahrscheinlichkeit = 0.0025f + ((0.75f - this.mPart.stats.reliability) / 0.15f * 0.0025f);
+		else
+			ausfallWahrscheinlichkeit = 0.0045f;
+
+		if (RandomUtility.GetRandom01() <= ausfallWahrscheinlichkeit)
+			return 1f;
+
+		return this.GetNextConditionLoss(inCondition, inType, inVehicle);
+	}
+
 	public float GetNextConditionLoss(float inCondition, CarPart.PartType inType, RacingVehicle inVehicle)
 	{
 		if (this.BonusConditionLossPrevented() || inVehicle.timer.hasSeenChequeredFlag || inVehicle.behaviourManager.isOutOfRace)
 		{
 			return 0f;
 		}
-		float num = 0f;
-		if (inCondition > this.redZone)
-		{
-			num = RandomUtility.GetRandom(0.01f, 0.08f);
-		}
-		else if (inCondition > 0f)
-		{
-			num = RandomUtility.GetRandom(0.05f, 0.15f);
-		}
-		if (inVehicle.bonuses.IsBonusActive(MechanicBonus.Trait.Nurse))
-		{
-			num *= 0.5f;
-		}
 		if (inType == CarPart.PartType.Engine)
 		{
-			if (inVehicle.bonuses.IsBonusActive(MechanicBonus.Trait.EngineExpert))
+			float num = RandomUtility.GetRandom(0.015f, 0.02f);
+			switch (inVehicle.performance.fuel.engineMode)
 			{
-				num *= 0.5f;
-			}
-			else
-			{
-				switch (inVehicle.performance.fuel.engineMode)
-				{
 				case Fuel.EngineMode.SuperOvertake:
 				case Fuel.EngineMode.Overtake:
 					num *= 1.6f;
@@ -220,15 +232,35 @@ public class CarPartCondition
 				case Fuel.EngineMode.Low:
 					num *= 0.5f;
 					break;
-				}
 			}
+			return num;
 		}
-		return num * this.GetLossBonusForCircuitStatRelevancy(inType, inVehicle);
+		if (inType == CarPart.PartType.Brakes)
+		{
+			return RandomUtility.GetRandom(0.015f, 0.02f);
+		}
+		if (inType == CarPart.PartType.Gearbox)
+		{
+			return RandomUtility.GetRandom(0.015f, 0.02f);
+		}
+		if (inType == CarPart.PartType.Suspension)
+		{
+			return RandomUtility.GetRandom(0.015f, 0.02f);
+		}
+		if (inType == CarPart.PartType.FrontWing)
+		{
+			return RandomUtility.GetRandom(0.015f, 0.02f);
+		}
+		if (inType == CarPart.PartType.RearWing)
+		{
+			return RandomUtility.GetRandom(0.015f, 0.02f);
+		}
+		return 0f;
 	}
 
 	public void DecrementCondition(CarPart.PartType inType, RacingVehicle inVehicle)
 	{
-		float nextConditionLoss = this.GetNextConditionLoss(this.mCondition, inType, inVehicle);
+		float nextConditionLoss = this.GetNextRealConditionLoss(this.mCondition, inType, inVehicle);
 		CarPartCondition.PartState partState = this.mState;
 		float num = this.mCondition;
 		this.SetCondition(this.mCondition - nextConditionLoss);
