@@ -260,6 +260,11 @@ public class Driver : Person
 		return this.personalityTraitController.HasTrait(false, GameStatsConstants.injuryTraits);
 	}
 
+	public bool IsCriticalInjured()
+	{
+		return this.personalityTraitController.HasTrait(false, GameStatsConstants.criticalInjuryTraits);
+	}
+
 	public override bool IsReplacementPerson()
 	{
 		if (!this.mHasCachedReplacementDriverInfo)

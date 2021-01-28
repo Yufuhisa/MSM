@@ -108,7 +108,20 @@ public static class GameStatsConstants
 		241,
 		242,
 		243,
-		308
+		308,
+		331,
+		332,
+		333
+	};
+
+	public static int[] criticalInjuryTraits = new int[]
+	{
+		178, // cracked rib
+		241, // brocken meter tarsal (something with the foot)
+		242, // dislocated shoulder
+		243, // wiplash
+		308, // burn
+		331  // brocken leg
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;

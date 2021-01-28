@@ -528,12 +528,29 @@ public class Team : Entity
 	public void SelectMainDriversForSession()
 	{
 		bool flag = Game.instance.sessionManager.sessionType == SessionDetails.SessionType.Qualifying && this.championship.rules.gridSetup == ChampionshipRules.GridSetup.AverageLap;
+
+		bool alreadyOneDriverSittingOut = false;
+
+		// check if a driver is already sitting out
+		List<Driver> drivers = this.GetDrivers();
+		for (int i = 0; i < drivers.Count; i++)
+		{
+			if (this.contractManager.IsSittingOutEvent(drivers[i]))
+				alreadyOneDriverSittingOut = true;
+		}
+
 		for (int i = 0; i < CarManager.carCount; i++)
 		{
 			Driver[] driversForCar = this.GetDriversForCar(i);
 			this.mSelectedSessionDrivers[i].Clear();
 			foreach (Driver driver in driversForCar)
 			{
+				// For AI: First critical injured driver is sitting out
+				if (!this.IsPlayersTeam() && driver.IsCriticalInjured() && !alreadyOneDriverSittingOut)
+				{
+					this.contractManager.SetSittingOutEventDriver(driver);
+					alreadyOneDriverSittingOut = true;
+				}
 				if (this.contractManager.IsSittingOutEvent(driver))
 				{
 					this.mSelectedSessionDrivers[i].Add(this.GetReserveDriverToReplaceSitOut());
