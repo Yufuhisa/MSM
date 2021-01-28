@@ -301,17 +301,13 @@ public static class GameStatsConstants
 
 	public static readonly int qualifyingThresholdForQ3 = 10;
 
-	public static float frontWingRate = 0.1f;
-
-	public static float rearWingRate = 0.1f;
-
-	public static float engineRate = 0.5f;
-
-	public static float brakesRate = 0.5f;
-
-	public static float suspensionRate = 0.5f;
-
-	public static float gearBoxRate = 0.5f;
+	// Chance for parts for critical error (car dropping out) if total condition loss
+	public static float frontWingRate = 0.2f;
+	public static float rearWingRate = 0.5f;
+	public static float engineRate = 1.0f;
+	public static float brakesRate = 1.0f;
+	public static float suspensionRate = 1.0f;
+	public static float gearBoxRate = 1.0f;
 
 	public static int replacementPeopleCount = 20;
 
