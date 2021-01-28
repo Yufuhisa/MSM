@@ -142,7 +142,7 @@ public class SessionStrategy : InstanceCounter
 				return true;
 			}
 		}
-		else if (optimalTyreDistance < num4)
+		else if (optimalTyreDistance < num4 && lapsRemaining > 2)
 		{
 			this.mReasonForPreviousPit = SessionStints.ReasonForStint.PitTyreChange;
 			return true;
@@ -153,7 +153,7 @@ public class SessionStrategy : InstanceCounter
 			return true;
 		}
 		PrefGameAIStrategyDifficulty.Type aistrategyDifficulty = App.instance.preferencesManager.gamePreferences.GetAIStrategyDifficulty();
-		if (aistrategyDifficulty == PrefGameAIStrategyDifficulty.Type.Realistic && !Game.instance.challengeManager.IsAttemptingChallenge())
+		if (aistrategyDifficulty == PrefGameAIStrategyDifficulty.Type.Realistic && !Game.instance.challengeManager.IsAttemptingChallenge() && lapsRemaining > 2)
 		{
 			TyrePerformanceDesignData tyrePerformanceData = DesignDataManager.instance.GetDesignData().GetTyrePerformanceData(SessionStrategy.TyreOption.First);
 			int num5 = (tyrePerformanceData.lowPerformanceLapCount + tyrePerformanceData.mediumPerformanceLapCount + tyrePerformanceData.highPerformanceLapCount) / 2;
@@ -172,42 +172,26 @@ public class SessionStrategy : InstanceCounter
 				}
 			}
 		}
-		if (inIsPitlaneEntryGate && lapsRemaining > 1)
+		if (inIsPitlaneEntryGate && lapsRemaining > 1 && this.ShouldPitForDifferentTyreTread(tyreSet, 0f, true))
 		{
-			if (aistrategyDifficulty == PrefGameAIStrategyDifficulty.Type.Realistic && !Game.instance.challengeManager.IsAttemptingChallenge())
+			int num8 = Game.instance.sessionManager.lap;
+			RacingVehicle leader = Game.instance.sessionManager.GetLeader();
+			if (leader != null && leader.pathController.distanceAlongTrackPath01 > 0.75f)
 			{
-				if (this.ShouldPitForDifferentTyreTread(tyreSet, 0f, true))
-				{
-					int num8 = Game.instance.sessionManager.lap;
-					RacingVehicle leader = Game.instance.sessionManager.GetLeader();
-					if (leader != null && leader.pathController.distanceAlongTrackPath01 > 0.75f)
-					{
-						num8++;
-					}
-					TyreSet.Tread tread = tyreSet.GetTread();
-					TyreSet.Tread recommendedTreadForLap = SessionStrategy.GetRecommendedTreadForLap(num8 - 1);
-					TyreSet.Tread recommendedTreadForLap2 = SessionStrategy.GetRecommendedTreadForLap(num8);
-					TyreSet.Tread recommendedTreadForLap3 = SessionStrategy.GetRecommendedTreadForLap(num8 + 1);
-					float random2 = RandomUtility.GetRandom01();
-					bool flag4 = tread != TyreSet.Tread.Slick && this.mVehicle.standingsPosition > 5 && tread == recommendedTreadForLap2 && tread != recommendedTreadForLap3 && random2 < 0.2f;
-					bool flag5 = tread != recommendedTreadForLap2 && random2 < 0.8f;
-					bool flag6 = num8 > 1 && recommendedTreadForLap != tread && recommendedTreadForLap2 != tread;
-					if (flag4 || flag5 || flag6)
-					{
-						TyreSet.Tread treadWithLeastTimeCost = this.mVehicle.performance.tyrePerformance.GetTreadWithLeastTimeCost();
-						if (tread != treadWithLeastTimeCost)
-						{
-							this.mReasonForPreviousPit = SessionStints.ReasonForStint.PitTyreThreadChange;
-							return true;
-						}
-					}
-				}
+				num8++;
 			}
-			else if (!this.mVehicle.sessionAIOrderController.IsDriverOnIdealTyreTread())
+			TyreSet.Tread tread = tyreSet.GetTread();
+			TyreSet.Tread recommendedTreadForLap = SessionStrategy.GetRecommendedTreadForLap(num8 - 1);
+			TyreSet.Tread recommendedTreadForLap2 = SessionStrategy.GetRecommendedTreadForLap(num8);
+			TyreSet.Tread recommendedTreadForLap3 = SessionStrategy.GetRecommendedTreadForLap(num8 + 1);
+			float random2 = RandomUtility.GetRandom01();
+			bool flag4 = tread != TyreSet.Tread.Slick && this.mVehicle.standingsPosition > 5 && tread == recommendedTreadForLap2 && tread != recommendedTreadForLap3 && random2 < 0.2f;
+			bool flag5 = tread != recommendedTreadForLap2 && random2 < 0.8f;
+			bool flag6 = num8 > 1 && recommendedTreadForLap != tread && recommendedTreadForLap2 != tread;
+			if (flag4 || flag5 || flag6)
 			{
-				float currentPerformanceForSurfaceWater = this.mVehicle.performance.tyrePerformance.GetCurrentPerformanceForSurfaceWater();
-				float num9 = (this.mVehicle.championship.series == Championship.Series.EnduranceSeries) ? 0.6f : 0.2f;
-				if (currentPerformanceForSurfaceWater < num9 || (this.mVehicle.standingsPosition > 8 && RandomUtility.GetRandom01() < 0.25f))
+				TyreSet.Tread treadWithLeastTimeCost = this.mVehicle.performance.tyrePerformance.GetTreadWithLeastTimeCost();
+				if (tread != treadWithLeastTimeCost)
 				{
 					this.mReasonForPreviousPit = SessionStints.ReasonForStint.PitTyreThreadChange;
 					return true;

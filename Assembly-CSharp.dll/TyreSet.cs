@@ -309,7 +309,7 @@ public class TyreSet
 
 	public float GetOptimalTyreDistance()
 	{
-		float num = 0.12f;
+		float num = 0.18f;
 		return this.GetMaxDistance() * Mathf.Max(0f, this.GetCondition() - num);
 	}
 
