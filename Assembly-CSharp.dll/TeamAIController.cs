@@ -2659,7 +2659,7 @@ public class TeamAIController
 
 	private static readonly float carImprovementReliabilityMinAggression = 1f;
 
-	private static readonly float carImprovementReliabilityMaxAggression = 0.5f;
+	private static readonly float carImprovementReliabilityMaxAggression = 0.65f;
 
 	[NonSerialized]
 	private List<SponsorshipDeal> mChosenDealsCache = new List<SponsorshipDeal>();
