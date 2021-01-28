@@ -318,7 +318,7 @@
         <GearboxFailureTimeCost>30</GearboxFailureTimeCost>
         <RearWingFailureTimeCost>20</RearWingFailureTimeCost>
         <SuspensionFailureTimeCost>30</SuspensionFailureTimeCost>
-        <CarConditionTicksPerSession>10</CarConditionTicksPerSession>
+        <CarConditionTicksPerSession>30</CarConditionTicksPerSession>
 
       </CarCondition>
 
@@ -861,7 +861,7 @@
         <GearboxFailureTimeCost>30</GearboxFailureTimeCost>
         <RearWingFailureTimeCost>20</RearWingFailureTimeCost>
         <SuspensionFailureTimeCost>30</SuspensionFailureTimeCost>
-        <CarConditionTicksPerSession>10</CarConditionTicksPerSession>
+        <CarConditionTicksPerSession>30</CarConditionTicksPerSession>
 
       </CarCondition>
 
@@ -1404,7 +1404,7 @@
         <GearboxFailureTimeCost>40</GearboxFailureTimeCost>
         <RearWingFailureTimeCost>20</RearWingFailureTimeCost>
         <SuspensionFailureTimeCost>30</SuspensionFailureTimeCost>
-        <CarConditionTicksPerSession>10</CarConditionTicksPerSession>
+        <CarConditionTicksPerSession>30</CarConditionTicksPerSession>
 
       </CarCondition>
 
