@@ -582,7 +582,7 @@ public class GameTimer : InstanceCounter
 
 	public static float maxSkipSpeed = 120000f;
 
-	public static DateTime gameStartDate = new DateTime(2016, 3, 1);
+	public static DateTime gameStartDate = new DateTime(1997, 3, 1);
 
 	private readonly float mPreSeasonSkipSpeed = 300000f;
 
