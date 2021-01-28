@@ -21,30 +21,42 @@ public class CrashDirector
 			this.mRealSafetyCarCount = 2;
 			break;
 		case PrefGameRaceLength.Type.Long:
-			this.mRealSafetyCarCount = int.MaxValue;
+			this.mRealSafetyCarCount = 2;
 			break;
 		}
 		this.mSessionManager = Game.instance.sessionManager;
 		this.mSafetyCar = Game.instance.vehicleManager.safetyVehicle;
 		float random = RandomUtility.GetRandom01();
 		int i;
-		if (random > 0.98f)
+		if (random > 0.99f)
 		{
-			i = 5;
+			i = 8;
 		}
-		else if (random > 0.95f)
+		else if (random > 0.97f)
 		{
-			i = 4;
+			i = 7;
 		}
 		else if (random > 0.9f)
 		{
-			i = 3;
+			i = 6;
 		}
 		else if (random > 0.8f)
 		{
-			i = 2;
+			i = 5;
+		}
+		else if (random > 0.6f)
+		{
+			i = 4;
 		}
 		else if (random > 0.5f)
+		{
+			i = 3;
+		}
+		else if (random > 0.4f)
+		{
+			i = 2;
+		}
+		else if (random > 0.2f)
 		{
 			i = 1;
 		}
@@ -52,10 +64,9 @@ public class CrashDirector
 		{
 			i = 0;
 		}
-		bool flag = this.mSessionManager.currentSessionWeather.GetAverageWeather().rainType >= Weather.RainType.Heavy;
-		if (flag && i < 4)
+		if (this.mSessionManager.currentSessionWeather.GetAverageWeather().rainType >= Weather.RainType.Heavy && i < 4)
 		{
-			i += RandomUtility.GetRandom(0, 1);
+			i += RandomUtility.GetRandom(1, 2);
 		}
 		this.mCrashChunks = new CrashDirector.CrashRaceChunk[10];
 		for (int j = 0; j < this.mCrashChunks.Length; j++)
