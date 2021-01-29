@@ -25,7 +25,6 @@ public class TeamAIController
 		this.mHQTargetsList = new List<HQsBuildingInfo.Type>();
 		this.mHQHistoryList = new List<HQsBuildingInfo.Type>();
 		this.mPotentialHQTargets = new List<TeamAIController.HQBuildingValue>();
-		base..ctor();
 	}
 
 	public void Start(Team inTeam)
