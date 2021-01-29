@@ -121,7 +121,9 @@ public static class GameStatsConstants
 		242, // dislocated shoulder
 		243, // wiplash
 		308, // burn
-		331  // brocken leg
+		331, // brocken leg
+		332, // middle ear inflammation
+		333  // use testdriver in race (workarround for AI to use testdriver)
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;
