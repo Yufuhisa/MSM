@@ -245,6 +245,11 @@ public class RacingVehicle : Vehicle
 	public override void OnEnterPath(PathController.PathType inPath)
 	{
 		base.OnEnterPath(inPath);
+		
+		// if enter Track from PitlaneExit disable collision, most of the times (95%)
+		if (this.mPathController.currentPathType == PathController.PathType.PitlaneExit && inPath == PathController.PathType.Track && RandomUtility.GetRandom01() < 0.95f)
+			this.mCollisionCooldown = 5f;
+		
 		switch (this.strategy.status)
 		{
 		case SessionStrategy.Status.Pitting:
