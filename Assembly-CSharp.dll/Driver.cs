@@ -1052,37 +1052,49 @@ public class Driver : Person
 
 	public void UpdateSessionMorale(string inUpdateHistoryEntryName, float inOverallWeight, int inPosition, int inNumEntries, SessionDetails.SessionType inSessionType)
 	{
-		bool flag = inSessionType == SessionDetails.SessionType.Race;
-		float num = 0f;
-		float num2 = 0f;
-		int num3 = this.expectedRacePosition - inPosition;
-		bool flag2 = inPosition <= this.expectedRacePosition;
-		num += (float)num3 / (float)inNumEntries;
-		float num4 = (!flag) ? 0f : ((!flag2) ? this.moraleFailedExpectedPositionBonus : this.moraleAchieveExpectedPositionBonus);
-		float num5 = this.moraleChampionshipPositionNormalModifier;
-		Team team = this.contract.GetTeam();
-		if (team.championship.eventNumber > 1)
-		{
-			int num6 = this.startOfSeasonExpectedChampionshipPosition - this.GetChampionshipEntry().GetCurrentChampionshipPosition();
-			num5 = ((num3 >= 0 || num6 < 0) ? this.moraleChampionshipPositionNormalModifier : this.moraleKeptChampionshipExpectedPositionModifier);
-		}
-		if (flag && inPosition <= 3)
-		{
-			num4 = this.moraleSessionPodiumBonus;
-		}
-		if (flag)
+		bool isRace = inSessionType == SessionDetails.SessionType.Race;
+
+		// morale change for absolute position
+		bool expectedPosition = inPosition <= this.expectedRacePosition;
+		float moralePosChange = (!isRace) ? 0f : ((!expectedPosition) ? this.moraleFailedExpectedPositionBonus : this.moraleAchieveExpectedPositionBonus);
+		// if podium gives podiumBonus insteat
+		if (isRace && inPosition <= 3)
+			moralePosChange = this.moraleSessionPodiumBonus;
+		
+		// calculate career bonus, depending how close driver is to desired wins
+		float careerMoraleBonus = 0f;
+		if (isRace)
 		{
 			int totalCareerWins = this.careerHistory.GetTotalCareerWins();
 			int totalCareerChampionships = this.careerHistory.GetTotalCareerChampionships();
 			int num7 = totalCareerWins - this.GetDesiredWins();
 			int num8 = totalCareerChampionships - this.desiredChampionships;
-			num2 += (float)num7 / 100f;
-			num2 += (float)num8 / 100f;
+			careerMoraleBonus += (float)num7 / 100f;
+			careerMoraleBonus += (float)num8 / 100f;
+			careerMoraleBonus *= this.moraleGoalsWeight;
 		}
-		float num9 = num * this.moraleRacePerformanceWeight + ((!flag) ? 0f : (num2 * this.moraleGoalsWeight));
-		num9 /= this.moraleRacePerformanceWeight + ((!flag) ? 0f : this.moraleGoalsWeight);
+		
+		float num = 0f;
+		int diffExpectedPosition = this.expectedRacePosition - inPosition;
+		// relative position to expected position
+		num += (float)diffExpectedPosition / (float)inNumEntries;
+		float num5 = this.moraleChampionshipPositionNormalModifier;
+		
+		// lower morale change if still within expected championship postion, even when race postion is less than expected
+		if (this.contract.GetTeam().championship.eventNumber > 1)
+		{
+			int num6 = this.startOfSeasonExpectedChampionshipPosition - this.GetChampionshipEntry().GetCurrentChampionshipPosition();
+			num5 = ((diffExpectedPosition >= 0 || num6 < 0) ? this.moraleChampionshipPositionNormalModifier : this.moraleKeptChampionshipExpectedPositionModifier);
+		}
+		
+		float num9 = num * this.moraleRacePerformanceWeight + careerMoraleBonus;
+		num9 /= this.moraleRacePerformanceWeight + ((!isRace) ? 0f : this.moraleGoalsWeight);
 		num9 *= num5;
-		this.ModifyMorale(Mathf.Clamp((num9 + num4) * inOverallWeight, this.moraleMinSessionChange, this.moraleMaxSessionChange), inUpdateHistoryEntryName, true);
+		
+		float calculatedChange = Mathf.Clamp(num9 + moralePosChange, this.moraleMinSessionChange, this.moraleMaxSessionChange);
+		float weightedChange = calculatedChange * inOverallWeight;
+		
+		this.ModifyMorale(weightedChange, inUpdateHistoryEntryName, true);
 	}
 
 	public void OnSeasonStart()
@@ -1347,15 +1359,14 @@ public class Driver : Person
 
 	private readonly float moraleKeptChampionshipExpectedPositionModifier = 0.1f;
 
-	private readonly float moraleMinSessionChange = -0.2f;
+	// min and max morale change for each session (training, qualifying and race), before session type weighting!)
+	private readonly float moraleMinSessionChange = -0.1f;
+	private readonly float moraleMaxSessionChange = 0.1f;
 
-	private readonly float moraleMaxSessionChange = 0.2f;
-
-	private readonly float moralePracticeWeight = 0.05f;
-
-	private readonly float moraleQualifyingWeight = 0.3f;
-
-	private readonly float moraleRaceWeight = 0.65f;
+	// morale change weight for each session type (all together should be 1, than min/max sessionChange will be absoulte for each race weekend)
+	private readonly float moralePracticeWeight = 0.0f;
+	private readonly float moraleQualifyingWeight = 0.25f;
+	private readonly float moraleRaceWeight = 0.75f;
 
 	private readonly float moraleRacePerformanceWeight = 1f;
 
