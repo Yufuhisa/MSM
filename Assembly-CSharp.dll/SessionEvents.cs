@@ -34,25 +34,25 @@ public class SessionEvents : InstanceCounter
 		for (SessionEvents.EventType eventType = SessionEvents.EventType.Crash; eventType < SessionEvents.EventType.Count; eventType++)
 		{
 			float num = 0f;
-			float num2 = SessionEvents.GetPointsForWeatherType(eventType, Game.instance.sessionManager.currentSessionWeather);
+			float num2 = this.GetPointsForWeatherType(eventType, Game.instance.sessionManager.currentSessionWeather);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 0] += num2;
-			num2 = SessionEvents.GetPointsForTyreStats(eventType, this.mVehicle);
+			num2 = this.GetPointsForTyreStats(eventType, this.mVehicle);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 1] += num2;
-			num2 = SessionEvents.GetPointsForDrivingSytle(eventType, this.mVehicle);
+			num2 = this.GetPointsForDrivingSytle(eventType, this.mVehicle);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 2] += num2;
-			num2 = SessionEvents.GetPointsForDriverStats(eventType, this.mDriverStats, Game.instance.sessionManager.GetNormalizedSessionTime() > 0.7f);
+			num2 = this.GetPointsForDriverStats(eventType, this.mDriverStats, Game.instance.sessionManager.GetNormalizedSessionTime() > 0.7f);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 3] += num2;
-			num2 = SessionEvents.GetPointsForEngineMode(eventType, this.mVehicle);
+			num2 = this.GetPointsForEngineMode(eventType, this.mVehicle);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 4] += num2;
-			num2 = SessionEvents.GetPointsForBehaviourType(eventType, this.mVehicle);
+			num2 = this.GetPointsForBehaviourType(eventType, this.mVehicle);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 5] += num2;
-			num2 = SessionEvents.GetPointsForVehicleData(eventType, this.mVehicle);
+			num2 = this.GetPointsForVehicleData(eventType, this.mVehicle);
 			num += num2;
 			this.mPointsPerType[(int)eventType, 6] += num2;
 			switch (eventType)
@@ -148,7 +148,7 @@ public class SessionEvents : InstanceCounter
 		}
 	}
 
-	private static float GetPointsForVehicleData(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
+	private float GetPointsForVehicleData(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
 	{
 		bool flag = inVehicle.championship.series == Championship.Series.GTSeries;
 		float num = 0f;
@@ -182,7 +182,7 @@ public class SessionEvents : InstanceCounter
 		return num;
 	}
 
-	private static float GetPointsForWeatherType(SessionEvents.EventType inEventType, SessionWeatherDetails inWeatherDetails)
+	private float GetPointsForWeatherType(SessionEvents.EventType inEventType, SessionWeatherDetails inWeatherDetails)
 	{
 		float num = 0f;
 		Weather cachedCurrentWeather = inWeatherDetails.GetCachedCurrentWeather();
@@ -210,7 +210,7 @@ public class SessionEvents : InstanceCounter
 		return num;
 	}
 
-	private static float GetPointsForTyreStats(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
+	private float GetPointsForTyreStats(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
 	{
 		float num = 0f;
 		TyreSet.Tread recommendedTreadRightNow = SessionStrategy.GetRecommendedTreadRightNow();
@@ -236,7 +236,7 @@ public class SessionEvents : InstanceCounter
 		return num;
 	}
 
-	private static float GetPointsForDrivingSytle(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
+	private float GetPointsForDrivingSytle(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
 	{
 		float num = 0f;
 		if (inVehicle.pathController.currentPathType != PathController.PathType.Track)
@@ -264,8 +264,12 @@ public class SessionEvents : InstanceCounter
 		return num;
 	}
 
-	private static float GetPointsForEngineMode(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
+	private float GetPointsForEngineMode(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
 	{
+		// engine mode dosnt matter for driver error
+		if (inEventType == SessionEvents.EventType.Crash)
+			return 0f;
+
 		float num = 0f;
 		if (inVehicle.pathController.currentPathType != PathController.PathType.Track)
 		{
@@ -292,18 +296,25 @@ public class SessionEvents : InstanceCounter
 		return num;
 	}
 
-	private static float GetPointsForDriverStats(SessionEvents.EventType inEventType, DriverStats inStats, bool addFitness)
+	private float GetPointsForDriverStats(SessionEvents.EventType inEventType, DriverStats inStats, bool addFitness)
 	{
 		float num = 0f;
+		
+		// crashHappy drivers get additional crash chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {43}))
+			num += 1f;
+		
 		num += 0.5f - inStats.focus / 20f;
+		
 		if (addFitness)
 		{
-			num += 0.5f - inStats.fitness / 20f;
+			num += 1f - inStats.fitness / 20f;
 		}
-		return num * 0.5f;
+		
+		return num;
 	}
 
-	private static float GetPointsForBehaviourType(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
+	private float GetPointsForBehaviourType(SessionEvents.EventType inEventType, RacingVehicle inVehicle)
 	{
 		bool flag = inVehicle.championship.series == Championship.Series.GTSeries;
 		float num = 0f;
