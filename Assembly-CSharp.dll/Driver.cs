@@ -1053,8 +1053,10 @@ public class Driver : Person
 	public void UpdateSessionMorale(string inUpdateHistoryEntryName, float inOverallWeight, int inPosition, int inNumEntries, SessionDetails.SessionType inSessionType)
 	{
 		bool isRace = inSessionType == SessionDetails.SessionType.Race;
-
+		
 		// morale change for absolute position
+		// Podidium +3% (moraleSessionPodiumBonus)
+		// expectedPosition +/-2.5% (moraleFailedExpectedPositionBonus + moraleAchieveExpectedPositionBonus)
 		bool expectedPosition = inPosition <= this.expectedRacePosition;
 		float moralePosChange = (!isRace) ? 0f : ((!expectedPosition) ? this.moraleFailedExpectedPositionBonus : this.moraleAchieveExpectedPositionBonus);
 		// if podium gives podiumBonus insteat
@@ -1062,8 +1064,9 @@ public class Driver : Person
 			moralePosChange = this.moraleSessionPodiumBonus;
 		
 		// calculate career bonus, depending how close driver is to desired wins
+		// career bonus/malus only for main drivers
 		float careerMoraleBonus = 0f;
-		if (isRace)
+		if (isRace && !this.IsReserveDriver())
 		{
 			int totalCareerWins = this.careerHistory.GetTotalCareerWins();
 			int totalCareerChampionships = this.careerHistory.GetTotalCareerChampionships();
@@ -1074,24 +1077,24 @@ public class Driver : Person
 			careerMoraleBonus *= this.moraleGoalsWeight;
 		}
 		
-		float num = 0f;
+		float positionMoraleBonus = 0f;
 		int diffExpectedPosition = this.expectedRacePosition - inPosition;
 		// relative position to expected position
-		num += (float)diffExpectedPosition / (float)inNumEntries;
-		float num5 = this.moraleChampionshipPositionNormalModifier;
+		positionMoraleBonus += (float)diffExpectedPosition / (float)inNumEntries;
+		positionMoraleBonus *= this.moraleRacePerformanceWeight;
 		
 		// lower morale change if still within expected championship postion, even when race postion is less than expected
+		float keepChampionshipModifier = this.moraleChampionshipPositionNormalModifier;
 		if (this.contract.GetTeam().championship.eventNumber > 1)
 		{
 			int num6 = this.startOfSeasonExpectedChampionshipPosition - this.GetChampionshipEntry().GetCurrentChampionshipPosition();
-			num5 = ((diffExpectedPosition >= 0 || num6 < 0) ? this.moraleChampionshipPositionNormalModifier : this.moraleKeptChampionshipExpectedPositionModifier);
+			keepChampionshipModifier = ((diffExpectedPosition >= 0 || num6 < 0) ? this.moraleChampionshipPositionNormalModifier : this.moraleKeptChampionshipExpectedPositionModifier);
 		}
 		
-		float num9 = num * this.moraleRacePerformanceWeight + careerMoraleBonus;
-		num9 /= this.moraleRacePerformanceWeight + ((!isRace) ? 0f : this.moraleGoalsWeight);
-		num9 *= num5;
+		careerMoraleBonus *= keepChampionshipModifier;
+		positionMoraleBonus *= keepChampionshipModifier;
 		
-		float calculatedChange = Mathf.Clamp(num9 + moralePosChange, this.moraleMinSessionChange, this.moraleMaxSessionChange);
+		float calculatedChange = Mathf.Clamp(careerMoraleBonus + positionMoraleBonus + moralePosChange, this.moraleMinSessionChange, this.moraleMaxSessionChange);
 		float weightedChange = calculatedChange * inOverallWeight;
 		
 		this.ModifyMorale(weightedChange, inUpdateHistoryEntryName, true);
@@ -1368,9 +1371,9 @@ public class Driver : Person
 	private readonly float moraleQualifyingWeight = 0.25f;
 	private readonly float moraleRaceWeight = 0.75f;
 
-	private readonly float moraleRacePerformanceWeight = 1f;
+	private readonly float moraleRacePerformanceWeight = 0.25f;
 
-	private readonly float moraleGoalsWeight = 0.05f;
+	private readonly float moraleGoalsWeight = 0.01f;
 
 	private readonly float negativeImprovementHQScalar = 0.9f;
 
