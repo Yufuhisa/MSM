@@ -317,9 +317,12 @@ public class Mechanic : Person
 			foreach (Driver inDriver in this.GetDrivers())
 			{
 				Mechanic.DriverRelationship relationshipWithDriver = this.GetRelationshipWithDriver(inDriver);
-				relationshipWithDriver.numberOfWeeks++;
-				relationshipWithDriver.relationshipAmount = Math.Min(100f, relationshipWithDriver.relationshipAmount + this.weeklyRelationshipIncreaseRate);
-				relationshipWithDriver.relationshipAmountAfterDecay = this.mechanicRelationshipInvalidDecay;
+				if (relationshipWithDriver != null)
+				{
+					relationshipWithDriver.numberOfWeeks++;
+					relationshipWithDriver.relationshipAmount = Math.Min(100f, relationshipWithDriver.relationshipAmount + this.weeklyRelationshipIncreaseRate);
+					relationshipWithDriver.relationshipAmountAfterDecay = this.mechanicRelationshipInvalidDecay;
+				}
 			}
 		}
 	}
