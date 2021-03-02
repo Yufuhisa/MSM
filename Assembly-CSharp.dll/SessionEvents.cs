@@ -304,6 +304,10 @@ public class SessionEvents : InstanceCounter
 		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {43}))
 			num += 1f;
 		
+		// rockSolid drivers get less crash chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {44}))
+			num -= 0.5f;
+		
 		num += 0.5f - inStats.focus / 20f;
 		
 		if (addFitness)
