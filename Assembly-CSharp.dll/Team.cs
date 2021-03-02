@@ -208,7 +208,8 @@ public class Team : Entity
 			}
 		}
 		DriverManager driverManager = Game.instance.driverManager;
-		driverManager.AddDriverToChampionship(driver, true);
+		if (driver != null)
+			driverManager.AddDriverToChampionship(driver, true);
 		return driver;
 	}
 
@@ -344,9 +345,10 @@ public class Team : Entity
 			if (!allEmployeeSlotsForJob[inCarIndex].IsAvailable())
 			{
 				Driver driver = allEmployeeSlotsForJob[inCarIndex].personHired as Driver;
-				if (this.contractManager.IsSittingOutEvent(driver))
+				Driver reserveDriver = this.GetReserveDriverToReplaceSitOut();
+				if (this.contractManager.IsSittingOutEvent(driver) && reserveDriver != null)
 				{
-					this.mDriversCache.Add(this.GetReserveDriverToReplaceSitOut());
+					this.mDriversCache.Add(reserveDriver);
 				}
 				else
 				{
@@ -553,7 +555,11 @@ public class Team : Entity
 				}
 				if (this.contractManager.IsSittingOutEvent(driver))
 				{
-					this.mSelectedSessionDrivers[i].Add(this.GetReserveDriverToReplaceSitOut());
+					Driver reserveDriver = this.GetReserveDriverToReplaceSitOut();
+					if (reserveDriver != null)
+						this.mSelectedSessionDrivers[i].Add(reserveDriver);
+					else
+						this.mSelectedSessionDrivers[i].Add(driver);
 				}
 				else if (!flag)
 				{
