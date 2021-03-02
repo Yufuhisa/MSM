@@ -84,7 +84,7 @@ public class PenaltyDirector
 			RacingVehicle racingVehicle = inVehicles[i];
 			Team team = racingVehicle.driver.contract.GetTeam();
 			int num = 0;
-			int num2 = 0;
+			int placesLost = 0;
 			bool flag = team.investor != null && team.investor.hasPartRiskBonus;
 			int num3 = (!flag) ? 0 : team.investor.partRiskBonus;
 			foreach (CarPart.PartType inType in CarPart.GetPartType(team.championship.series, false))
@@ -105,9 +105,9 @@ public class PenaltyDirector
 						Transaction transaction = new Transaction(Transaction.Group.GlobalMotorsport, Transaction.Type.Debit, inAmount, Localisation.LocaliseID("PSG_10010576", null));
 						team.financeController.unnallocatedTransactions.Add(transaction);
 						num++;
-						int num5 = 2 * team.rulesBrokenThisSeason;
-						num2 += num5;
-						PenaltyPartRulesBroken inPenalty = new PenaltyPartRulesBroken(part, inAmount, num5);
+						// lose max places as penality (max 24 cars)
+						placesLost = 23;
+						PenaltyPartRulesBroken inPenalty = new PenaltyPartRulesBroken(part, inAmount, placesLost);
 						racingVehicle.sessionPenalty.AddPenalty(inPenalty);
 						if (team.IsPlayersTeam())
 						{
@@ -117,9 +117,9 @@ public class PenaltyDirector
 					}
 				}
 			}
-			if (num2 != 0)
+			if (placesLost != 0)
 			{
-				dictionary.Add(racingVehicle, num2);
+				dictionary.Add(racingVehicle, placesLost);
 			}
 		}
 		for (int k = 0; k < inVehicles.Count; k++)
