@@ -140,8 +140,9 @@ public class TeamManager : GenericManager<Team>
 					{
 					case Championship.Series.SingleSeaterSeries:
 					case Championship.Series.GTSeries:
-						list.Add(team.GetDriver(0));
-						list.Add(team.GetDriver(1));
+						// use real drivers for car (including check for reserve driver)
+						list.Add(team.GetDriverForCar(0));
+						list.Add(team.GetDriverForCar(1));
 						break;
 					case Championship.Series.EnduranceSeries:
 						list.AddRange(team.GetDrivers());
