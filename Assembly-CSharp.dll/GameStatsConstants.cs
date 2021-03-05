@@ -111,7 +111,8 @@ public static class GameStatsConstants
 		308,
 		331,
 		332,
-		333
+		333,
+		334
 	};
 
 	public static int[] criticalInjuryTraits = new int[]
@@ -121,9 +122,10 @@ public static class GameStatsConstants
 		242, // dislocated shoulder
 		243, // wiplash
 		308, // burn
-		331, // brocken leg
-		332, // middle ear inflammation
-		333  // use testdriver in race (workarround for AI to use testdriver)
+		331, // brocken legs - 19 weeks
+		332, // use testdriver in race (workarround for AI to use testdriver) - 10 weeks
+		333, // middle ear inflammation - 8 weeks
+		334  // use testdriver in race (workarround for AI to use testdriver) - 16 weeks
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;
