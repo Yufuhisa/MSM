@@ -12,6 +12,8 @@ public class CrashDirector
 
 	public void OnSessionStarting()
 	{
+		this.mCrashVehicle.Clear();
+		
 		switch (DesignDataManager.GetGameLength(false))
 		{
 		case PrefGameRaceLength.Type.Short:
@@ -175,12 +177,12 @@ public class CrashDirector
 
 	public bool CalculateCrashChance(RacingVehicle inVehicle, bool reduceCrashCount)
 	{
-		if (this.IsSessionCrashingViable(inVehicle))
+		if (this.mCrashVehicle.Contains(inVehicle))
+			return true;
+		
+		if (!reduceCrashCount && this.IsSessionCrashingViable(inVehicle))
 		{
-			if (reduceCrashCount)
-			{
-				this.mActiveChunk.crashCount--;
-			}
+			this.mCrashVehicle.Add(inVehicle);
 			return true;
 		}
 		return false;
@@ -194,13 +196,17 @@ public class CrashDirector
 	private bool IsSessionCrashingViable(RacingVehicle inVehicle)
 	{
 		SessionManager sessionManager = Game.instance.sessionManager;
-		bool flag = Game.instance.vehicleManager.safetyVehicle.IsReadyToGoOut() || sessionManager.championship.rules.safetyCarUsage != ChampionshipRules.SafetyCarUsage.RealSafetyCar;
+		
+		bool safetyCarReady = Game.instance.vehicleManager.safetyVehicle.IsReadyToGoOut() || sessionManager.championship.rules.safetyCarUsage != ChampionshipRules.SafetyCarUsage.RealSafetyCar;
 		bool isTutorialActiveInCurrentGameState = Game.instance.tutorialSystem.isTutorialActiveInCurrentGameState;
-		bool flag2 = sessionManager.sessionType == SessionDetails.SessionType.Race;
-		bool flag3 = sessionManager.lap > 1 && sessionManager.lapCount - sessionManager.lap >= 3;
-		bool flag4 = this.mActiveChunk.crashCount > 0;
-		bool flag5 = Game.instance.sessionManager.flag == SessionManager.Flag.Green;
-		return flag5 && !isTutorialActiveInCurrentGameState && flag && flag2 && flag4 && flag3 && !inVehicle.behaviourManager.isOutOfRace && (this.mVehiclesCantCrash == null || !this.mVehiclesCantCrash.Contains(inVehicle)) && inVehicle.sessionEvents.IsReadyTo(SessionEvents.EventType.Crash);
+		bool isRace = sessionManager.sessionType == SessionDetails.SessionType.Race;
+		bool noRaceStartEnd = sessionManager.lap > 1 && sessionManager.lapCount - sessionManager.lap >= 3;
+		// bool flag4 = this.mActiveChunk.crashCount > 0;
+		bool crashesLeft = mCrashVehicle.Count < 10;
+		bool isGreenFlag = Game.instance.sessionManager.flag == SessionManager.Flag.Green;
+		return isGreenFlag && !isTutorialActiveInCurrentGameState && safetyCarReady && isRace && noRaceStartEnd
+		&& !inVehicle.behaviourManager.isOutOfRace && (this.mVehiclesCantCrash == null || !this.mVehiclesCantCrash.Contains(inVehicle))
+		&& inVehicle.sessionEvents.IsReadyTo(SessionEvents.EventType.Crash);
 	}
 
 	public static RacingVehicle GetTeamMate(RacingVehicle inVehicle)
@@ -255,6 +261,8 @@ public class CrashDirector
 	private SafetyVehicle mSafetyCar;
 
 	private SessionManager mSessionManager;
+	
+	private List<RacingVehicle> mCrashVehicle = new List<RacingVehicle>();
 
 	[fsObject(MemberSerialization = fsMemberSerialization.OptOut)]
 	private class CrashRaceChunk
