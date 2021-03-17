@@ -353,7 +353,7 @@ public class PartImprovement
 		if (!Game.instance.time.isPaused && !this.FixingCondition())
 		{
 			int hour = Game.instance.time.now.Hour;
-			if (hour >= 9 && hour < 18 && Game.instance.time.now.DayOfWeek != null && Game.instance.time.now.DayOfWeek != 6)
+			if (hour >= 9 && hour < 18 && Game.instance.time.now.DayOfWeek != null && Game.instance.time.now.DayOfWeek != DayOfWeek.Saturday)
 			{
 				for (int i = 0; i < PartImprovement.allImprovementTypes.Length; i++)
 				{
@@ -505,7 +505,7 @@ public class PartImprovement
 		{
 		case CarPartStats.CarPartStat.Reliability:
 		{
-			float b = 0.12f;
+			float b = 0.04f;
 			float a = 0f;
 			float num2 = 40f;
 			float t = (float)this.mechanics[(int)inStat] / num2;
@@ -590,16 +590,12 @@ public class PartImprovement
 		int num2 = 9;
 		int num3 = 18;
 		DateTime dateTime = Game.instance.time.now;
-		DateTime dateTime2;
-		dateTime2..ctor(dateTime.Year, dateTime.Month, dateTime.Day, num2, 0, 0);
-		DateTime dateTime3;
-		dateTime3..ctor(dateTime.Year, dateTime.Month, dateTime.Day, num3, 0, 0);
-		DateTime dateTime4;
-		dateTime4..ctor(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0);
+		DateTime dateTime2 = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, num2, 0, 0);
+		DateTime dateTime3 = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, num3, 0, 0);
+		DateTime dateTime4 = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0);
 		DateTime dateTime5 = dateTime4.AddDays(1.0);
 		double num4 = (dateTime2 - dateTime).TotalSeconds;
-		TimeSpan timeSpan;
-		timeSpan..ctor(num3 - num2, 0, 0);
+		TimeSpan timeSpan = new TimeSpan(num3 - num2, 0, 0);
 		double totalSeconds = timeSpan.TotalSeconds;
 		double num5 = (dateTime3 - dateTime).TotalSeconds;
 		num5 = ((num5 <= totalSeconds) ? num5 : totalSeconds);
@@ -607,7 +603,7 @@ public class PartImprovement
 		double num6 = 86400.0;
 		double totalSeconds2 = (dateTime5 - dateTime).TotalSeconds;
 		DayOfWeek dayOfWeek = dateTime.DayOfWeek;
-		if (dayOfWeek != null && dayOfWeek != 6)
+		if (dayOfWeek != null && dayOfWeek != DayOfWeek.Saturday)
 		{
 			inWorkSeconds -= num5;
 		}
@@ -620,7 +616,7 @@ public class PartImprovement
 		while (inWorkSeconds > 0.0)
 		{
 			dayOfWeek = dateTime.DayOfWeek;
-			if (dayOfWeek != null && dayOfWeek != 6)
+			if (dayOfWeek != null && dayOfWeek != DayOfWeek.Saturday)
 			{
 				inWorkSeconds -= totalSeconds;
 			}

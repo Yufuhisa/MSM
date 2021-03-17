@@ -34,7 +34,7 @@ public static class GameStatsConstants
 
 	public static int slotCount = 5;
 
-	public static float initialReliabilityValue = 0.4f;
+	public static float initialReliabilityValue = 0.55f;
 
 	public static float initialMaxReliabilityValue = 1f;
 
@@ -109,10 +109,13 @@ public static class GameStatsConstants
 		242,
 		243,
 		308,
-		331,
-		332,
-		333,
-		334
+		400,
+		401,
+		402,
+		403,
+		404,
+		406,
+		407
 	};
 
 	public static int[] criticalInjuryTraits = new int[]
@@ -122,10 +125,13 @@ public static class GameStatsConstants
 		242, // dislocated shoulder
 		243, // wiplash
 		308, // burn
-		331, // brocken legs - 19 weeks
-		332, // use testdriver in race (workarround for AI to use testdriver) - 10 weeks
-		333, // middle ear inflammation - 8 weeks
-		334  // use testdriver in race (workarround for AI to use testdriver) - 16 weeks
+		400, // brocken legs - 19 weeks
+		401, // use testdriver in race (workarround for AI to use testdriver) - 10 weeks
+		402, // middle ear inflammation - 8 weeks
+		403, // use testdriver in race (workarround for AI to use testdriver) - 16 weeks
+		404, // use testdriver in race (workarround for AI to use testdriver) - 23 weeks
+		406, // brocken legs - 16 weeks
+		407  // brocken hand - 3 weeks
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;
