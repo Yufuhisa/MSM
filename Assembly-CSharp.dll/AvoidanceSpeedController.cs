@@ -83,7 +83,8 @@ public class AvoidanceSpeedController : SpeedController
 					Vehicle vehicle2 = base.vehicle.pathController.nearbyObstacles[i];
 					if (vehicle2.pathController.currentPathType == base.vehicle.pathController.currentPathType)
 					{
-						if (vehicle2.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.BlueFlag)
+						// vehilces with blue flag (overtake) or that are spinning are to be ignored (just drive through them =D)
+						if (vehicle2.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.BlueFlag && vehicle2.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.Spin)
 						{
 							if (base.vehicle.pathController.IsBehindVehicle(vehicle2) && !base.vehicle.pathController.IsBesideVehicle(vehicle2))
 							{
