@@ -28,7 +28,7 @@ public class ContractPitCrew : ContractPerson
 
 	public void SignContract(Entity inTeam)
 	{
-		this.mRacesLeft = 12;
+		this.mRacesLeft = ContractPitCrew.CONTRACT_RACES_LENGTH;
 		this.job = Contract.Job.PitCrewMember;
 		this.employeer = inTeam;
 		this.SetContractState(Contract.ContractStatus.OnGoing);
@@ -88,7 +88,7 @@ public class ContractPitCrew : ContractPerson
 		}
 	}
 
-	public const int CONTRACT_RACES_LENGTH = 12;
+	public const int CONTRACT_RACES_LENGTH = 34;
 
-	private int mRacesLeft = 12;
+	private int mRacesLeft = ContractPitCrew.CONTRACT_RACES_LENGTH;
 }
