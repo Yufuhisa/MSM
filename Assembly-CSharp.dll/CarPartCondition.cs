@@ -193,12 +193,14 @@ public class CarPartCondition
 
 		float ausfallWahrscheinlichkeit;
 
+		if (this.mPart.stats.reliability >= 0.95f)
+			ausfallWahrscheinlichkeit = 0.0007f;
 		if (this.mPart.stats.reliability >= 0.9f)
-			ausfallWahrscheinlichkeit = 0.0013f;
+			ausfallWahrscheinlichkeit = 0.0007f + ((0.95f - this.mPart.stats.reliability) / 0.05f * 0.0006f);
 		else if (this.mPart.stats.reliability >= 0.75f)
-			ausfallWahrscheinlichkeit = 0.0013f + ((0.9f - this.mPart.stats.reliability) / 0.15f * 0.0013f);
-		else if (this.mPart.stats.reliability > 0.6f)
-			ausfallWahrscheinlichkeit = 0.0025f + ((0.75f - this.mPart.stats.reliability) / 0.15f * 0.0025f);
+			ausfallWahrscheinlichkeit = 0.0013f + ((0.9f - this.mPart.stats.reliability) / 0.15f * 0.0012f);
+		else if (this.mPart.stats.reliability >= 0.6f)
+			ausfallWahrscheinlichkeit = 0.0025f + ((0.75f - this.mPart.stats.reliability) / 0.15f * 0.0020f);
 		else
 			ausfallWahrscheinlichkeit = 0.0045f;
 
