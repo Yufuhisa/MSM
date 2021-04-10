@@ -36,7 +36,6 @@ public class AISpinBehaviour : AIRacingBehaviour
 			this.mTargetAngle = -this.mTargetAngle;
 		}
 		this.SetTarget();
-		Game.instance.sessionManager.raceDirector.SetYellowFlag(this.mRacingVehicle.timer.sectorVehicleIsIn, this.mRecoveryTime * 2f + 4f);
 		CommentaryManager.SendComment(this.mRacingVehicle, Comment.CommentType.Spins, new object[]
 		{
 			this.mRacingVehicle.driver

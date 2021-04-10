@@ -229,12 +229,13 @@ public class Vehicle : InstanceCounter
 					{
 						bool flag4 = this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.InOutLap;
 						bool flag5 = vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.InOutLap;
+						bool IsSpinning = (vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin || this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin);
 						if (flag3)
 						{
 							flag4 = (this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.BlueFlag);
 							flag5 = (vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.BlueFlag);
 						}
-						if ((flag4 && !flag5) || (!flag4 && flag5))
+						if (IsSpinning || (flag4 && !flag5) || (!flag4 && flag5))
 						{
 							flag = false;
 						}

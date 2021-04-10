@@ -201,6 +201,12 @@ public class AIRacingBehaviour : AIBehaviour
 
 	private void CheckForSpinOutOpportunity()
 	{
+		if (Game.instance.sessionManager.raceDirector.spinOutDirector.IsSpinOutViable(this.mRacingVehicle))
+		{
+			this.mRacingVehicle.sessionEvents.EventActivated(SessionEvents.EventType.SpinOut);
+			this.mRacingVehicle.behaviourManager.ChangeBehaviour(AIBehaviourStateManager.Behaviour.Spin);
+			Game.instance.sessionManager.raceDirector.spinOutDirector.OnSpinOutIncident(this.mRacingVehicle);
+		}
 	}
 
 	private void CheckForOvertakeOpportunity()
