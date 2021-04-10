@@ -67,7 +67,7 @@ public class Supplier
 			num = this.mBasePrice;
 		}
 		float num2;
-		if (!this.teamDiscounts.TryGetValue(inTeam.teamID, ref num2))
+		if (!this.teamDiscounts.TryGetValue(inTeam.teamID, out num2))
 		{
 			return num;
 		}
@@ -99,7 +99,7 @@ public class Supplier
 	public float GetTeamDiscount(Team inTeam)
 	{
 		float result = 0f;
-		this.teamDiscounts.TryGetValue(inTeam.teamID, ref result);
+		this.teamDiscounts.TryGetValue(inTeam.teamID, out result);
 		return result;
 	}
 
