@@ -108,22 +108,22 @@ public class UISupplierOption : MonoBehaviour
 
 	public static void SetStatString(TextMeshProUGUI inLabel, float inValue)
 	{
-		if (inValue > 4f)
+		if (inValue > 6f)
 		{
 			inLabel.color = UIConstants.positiveColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010192", null);
 		}
-		else if (inValue > 3f)
+		else if (inValue > 5f)
 		{
 			inLabel.color = UIConstants.positiveColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010191", null);
 		}
-		else if (inValue > 2f)
+		else if (inValue > 4f)
 		{
 			inLabel.color = UIConstants.mailMedia;
 			inLabel.text = Localisation.LocaliseID("PSG_10010190", null);
 		}
-		else if (inValue > 1f)
+		else if (inValue > 3f)
 		{
 			inLabel.color = UIConstants.negativeColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010189", null);

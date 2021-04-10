@@ -51,11 +51,11 @@ public class Supplier
 		int num;
 		if (this.supplierType == Supplier.SupplierType.Engine)
 		{
-			num = this.mBasePrice + Mathf.RoundToInt((float)this.mRandomEngineLevelModifier * this.mPriceMultiplier * this.mScalar);
+			num = this.mBasePrice + Mathf.RoundToInt((float)this.mRandomEngineLevelModifier * this.mPriceMultiplier);
 		}
 		else if (this.supplierType == Supplier.SupplierType.Battery)
 		{
-			num = this.mBasePrice + Mathf.RoundToInt(this.mRandomHarvestEfficiencyModifier * this.mPriceMultiplier * this.mScalar);
+			num = this.mBasePrice + Mathf.RoundToInt(this.mRandomHarvestEfficiencyModifier * this.mPriceMultiplier);
 			if (inTeam.championship.rules.isHybridModeActive)
 			{
 				num += GameStatsConstants.hybridModeCost;
@@ -78,11 +78,11 @@ public class Supplier
 	{
 		if (this.supplierType == Supplier.SupplierType.Engine)
 		{
-			return this.mBasePrice + Mathf.RoundToInt((float)this.mRandomEngineLevelModifier * this.mPriceMultiplier * this.mScalar);
+			return this.mBasePrice + Mathf.RoundToInt((float)this.mRandomEngineLevelModifier * this.mPriceMultiplier);
 		}
 		if (this.supplierType == Supplier.SupplierType.Battery)
 		{
-			int num = this.mBasePrice + Mathf.RoundToInt(this.mRandomHarvestEfficiencyModifier * this.mPriceMultiplier * this.mScalar);
+			int num = this.mBasePrice + Mathf.RoundToInt(this.mRandomHarvestEfficiencyModifier * this.mPriceMultiplier);
 			if (inChampionship.rules.isHybridModeActive)
 			{
 				num += GameStatsConstants.hybridModeCost;
@@ -154,9 +154,7 @@ public class Supplier
 		return string.Empty;
 	}
 
-	private readonly float mPriceMultiplier = 0.4f;
-
-	private readonly float mScalar = 1000000f;
+	private readonly float mPriceMultiplier = 100000f;
 
 	public Supplier.SupplierType supplierType = Supplier.SupplierType.Brakes;
 
