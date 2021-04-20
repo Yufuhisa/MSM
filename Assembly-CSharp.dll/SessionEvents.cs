@@ -35,8 +35,228 @@ public class SessionEvents : InstanceCounter
 	}
 	
 	private bool IsReadyToSpin() {
-		float spinChance = 0.002f;
-		return RandomUtility.GetRandom01() < spinChance;
+
+		float spinChance = 0.0005f;
+		
+		Weather.RainType rainType = Game.instance.sessionManager.currentSessionWeather.GetCurrentWeather().rainType;
+		Weather.WaterLevel trackWaterType = Game.instance.sessionManager.currentSessionWeather.waterLevel;
+		Weather.RubberLevel trackRubberType = Game.instance.sessionManager.currentSessionWeather.rubberLevel;
+
+		// ===============================
+		// driver perks
+		// ===============================
+
+		// hot Head drivers have +20% spin chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {287}))
+			spinChance *= 1.2f;
+
+		// rockSolid drivers have -10% spin chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {44}))
+			spinChance *= 0.9f;
+
+		// slow Reactions drivers have +20% spin chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {83}))
+			spinChance *= 1.2f;
+		// lightning Reactions drivers have -20% spin chance
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {82}))
+			spinChance *= 0.8f;
+
+		// ===============================
+		// rubber type
+		// ===============================
+		
+		float rubberModifier = 1f;
+		
+		switch (trackRubberType) {
+			case Weather.RubberLevel.Low:
+				rubberModifier = 0.9f;
+				break;
+			case Weather.RubberLevel.Medium:
+				rubberModifier = 0.8f;
+				break;
+			case Weather.RubberLevel.High:
+				rubberModifier = 0.7f;
+				break;
+			default:
+				rubberModifier = 1f;
+				break;
+		}
+
+		spinChance *= rubberModifier;
+
+		// ===============================
+		// weather type
+		// ===============================
+		
+		float weatherModifier = 0f;
+		
+		switch (rainType) {
+			case Weather.RainType.Light:
+				weatherModifier = 0.1f;
+				break;
+			case Weather.RainType.Medium:
+				weatherModifier = 0.25f;
+				break;
+			case Weather.RainType.Heavy:
+				weatherModifier = 1f;
+				break;
+			case Weather.RainType.Monsooon:
+				weatherModifier = 5f;
+				break;
+			default:
+				weatherModifier = -0.25f;
+				break;
+		}
+		// weatherPro driver have +50% rain modifier (only for bad/positiv modifiers)
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {73}) && weatherModifier > 0f)
+			weatherModifier *= 1.5f;
+		// weatherStruggler driver have half rain modifier (only for bad/positiv modifiers)
+		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {74}) && weatherModifier > 0f)
+			weatherModifier *= 0.5f;
+		
+		spinChance *= (1f + weatherModifier);
+
+		// ===============================
+		// tyre stats
+		// ===============================
+		
+		float tyreStatsModifier = 1f;
+		
+		// +100% for every tyre type level below recommended tyre type
+		float diffCurTyresToRecTyres = SessionStrategy.GetRecommendedTreadRightNow() - this.mVehicle.setup.currentSetup.tyreSet.GetTread();
+		if (diffCurTyresToRecTyres > 0) {
+			tyreStatsModifier *= (1f + diffCurTyresToRecTyres);
+		}
+		
+		// change for tyre condition
+		float tyreCondition = this.mVehicle.setup.currentSetup.tyreSet.GetCondition();
+		if (tyreCondition < 0.0f) {
+			// +100% for 0 condition
+			tyreStatsModifier *= 2f;
+		}
+		else if (tyreCondition < 0.25f) {
+			// +25% between 0% and 25% condition
+			tyreStatsModifier *= 1.25f;
+		}
+		else if (tyreCondition < 0.5f) {
+			// +10% between 25% and 50% condition
+			tyreStatsModifier *= 1.1f;
+		}
+		
+		spinChance *= tyreStatsModifier;
+		
+		// ===============================
+		// modifier driving style
+		// ===============================
+		
+		float drivingStyleModifier = 1f;
+		
+		switch (this.mVehicle.performance.drivingStyleMode) {
+			case DrivingStyle.Mode.Attack:
+				drivingStyleModifier = 1.5f;
+				break;
+			case DrivingStyle.Mode.Push:
+				drivingStyleModifier = 1.25f;
+				break;
+			default:
+				drivingStyleModifier = 1f;
+				break;
+		}
+		
+		spinChance *= drivingStyleModifier;
+
+		// ===============================
+		// modifier driver stats
+		// ===============================
+
+		float driverStatsModifier = 1f;
+
+		// modifier between -/+ 50% depending on smoothness statt (+0% with 10 smoothness)
+		driverStatsModifier *= 1.5f - this.mDriverStats.smoothness / 20f;
+		// modifier between -/+ 50% depending on cornering statt (+0% with 10 cornering)
+		driverStatsModifier *= 1.5f - this.mDriverStats.cornering / 20f;
+
+		// up to +50% for last 30% of race, depending on fitness
+		if (Game.instance.sessionManager.GetNormalizedSessionTime() > 0.7f)
+		{
+			driverStatsModifier *= 1.5f - (0.5f * this.mDriverStats.fitness / 20f);
+		}
+
+		spinChance *= driverStatsModifier;
+
+		// ===============================
+		// modifier behaviour type
+		// ===============================
+		
+		float behaviourTypeModifier = 0f;
+		
+		switch (this.mVehicle.behaviourManager.currentBehaviour.behaviourType) {
+			case AIBehaviourStateManager.Behaviour.Overtaking:
+				if (rainType == Weather.RainType.Heavy || rainType == Weather.RainType.Monsooon)
+					behaviourTypeModifier = 0.5f;
+				else
+					behaviourTypeModifier = 0.25f;
+				// reduce modifier if ahead is letting this car through (or should be)
+				if (this.mVehicle.ahead.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.BlueFlag)
+					behaviourTypeModifier *= 0.5f;
+				break;
+			case AIBehaviourStateManager.Behaviour.Defending:
+				behaviourTypeModifier = 0.1f;
+				break;
+			case AIBehaviourStateManager.Behaviour.SafetyFlag:
+				behaviourTypeModifier = -0.5f;
+				break;
+			case AIBehaviourStateManager.Behaviour.SafetyCar:
+				behaviourTypeModifier = -0.9f;
+				break;
+			default:
+				behaviourTypeModifier = 0f;
+				break;
+		}
+		
+		spinChance *= (1f + behaviourTypeModifier);
+		
+		// ===============================
+		// modifier vehicle data
+		// ===============================
+		
+		float vehicleDataModifier = 1f;
+		
+		if (this.mVehicle.pathController.currentPathType != PathController.PathType.Track)
+			vehicleDataModifier = 0f;
+		else {
+			// check if duel (at least one other car below 1 second and without BlueFlag)
+			bool duelCheck = (this.mVehicle.ahead != null && this.mVehicle.timer.gapToAhead < 1f && this.mVehicle.ahead.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.BlueFlag)
+				|| (this.mVehicle.timer.gapToBehind < 1f && this.mVehicle.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.BlueFlag);
+			if (duelCheck) {
+				if (this.mVehicle.timer.gapToAhead < 1f) {
+					// if duel with car ahead track water matters
+					switch (trackWaterType) {
+						case Weather.WaterLevel.Wet:
+							weatherModifier = 1.15f;
+							break;
+						case Weather.WaterLevel.Soaked:
+							weatherModifier = 1.175f;
+							break;
+						default:
+							weatherModifier = 1.1f;
+							break;
+					}
+				}
+				else {
+					vehicleDataModifier = 1.1f;
+				}
+			}
+		}
+		
+		spinChance *= vehicleDataModifier;
+
+		// ===============================
+		// final crash chance
+		// ===============================
+
+		return (RandomUtility.GetRandom01() < spinChance);
+
 	}
 		
 	private bool IsReadyToLockUp() {
@@ -207,9 +427,6 @@ public class SessionEvents : InstanceCounter
 		float behaviourTypeModifier = 0f;
 		
 		switch (this.mVehicle.behaviourManager.currentBehaviour.behaviourType) {
-			case AIBehaviourStateManager.Behaviour.Racing:
-				behaviourTypeModifier = 0f;
-				break;
 			case AIBehaviourStateManager.Behaviour.Overtaking:
 				if (rainType == Weather.RainType.Heavy || rainType == Weather.RainType.Monsooon)
 					behaviourTypeModifier = 0.5f;
@@ -223,6 +440,9 @@ public class SessionEvents : InstanceCounter
 				behaviourTypeModifier = 0.1f;
 				break;
 			case AIBehaviourStateManager.Behaviour.SafetyFlag:
+				behaviourTypeModifier = -0.5f;
+				break;
+			case AIBehaviourStateManager.Behaviour.SafetyCar:
 				behaviourTypeModifier = -0.9f;
 				break;
 			default:
@@ -239,7 +459,7 @@ public class SessionEvents : InstanceCounter
 		float vehicleDataModifier = 1f;
 		
 		if (this.mVehicle.pathController.currentPathType != PathController.PathType.Track)
-			vehicleDataModifier = -0.9f;
+			vehicleDataModifier = 0f;
 		else {
 			// check if duel (at least one other car below 1 second and without BlueFlag)
 			bool duelCheck = (this.mVehicle.ahead != null && this.mVehicle.timer.gapToAhead < 1f && this.mVehicle.ahead.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.BlueFlag)
