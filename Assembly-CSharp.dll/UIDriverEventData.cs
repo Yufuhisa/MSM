@@ -14,29 +14,38 @@ public class UIDriverEventData : MonoBehaviour
 		}
 		else
 		{
-			int num = -1;
-			int num2 = 20;
+			int points = -1;
+			int position = 20;
+			bool dnfFlag = false;
 			int count = inDetails.results.GetAllResultsForSession(SessionDetails.SessionType.Race).Count;
 			for (int i = 0; i < count; i++)
 			{
 				RaceEventResults.ResultData resultForDriver = inDetails.results.GetResultsForSession(SessionDetails.SessionType.Race).GetResultForDriver(inDriver);
 				if (resultForDriver != null)
 				{
-					if (num == -1)
+					if (points == -1)
 					{
-						num = 0;
+						points = 0;
 					}
-					num += resultForDriver.points;
-					num2 = resultForDriver.position;
+					points += resultForDriver.points;
+					position = resultForDriver.position;
+					if (resultForDriver.carState != RaceEventResults.ResultData.CarState.None)
+						dnfFlag = true;
 				}
 			}
-			this.pointsForEvent.text = ((num != -1) ? ((num != 0) ? num.ToString() : string.Empty) : "-");
-			this.pointsForEvent.color = ((num > 0) ? this.labelColor : this.labelColorFaded);
-			if (num2 >= 1 && num2 <= 3)
+			
+			if (dnfFlag && points <= 0)
+				// if retired or crashed and didnt get any points -> show DNF for this race
+				this.pointsForEvent.text = "DNF";
+			else
+				this.pointsForEvent.text = ((points != -1) ? ((points != 0) ? points.ToString() : string.Empty) : "-");
+			
+			this.pointsForEvent.color = ((points > 0) ? this.labelColor : this.labelColorFaded);
+			if (position >= 1 && position <= 3)
 			{
-				num2 = Mathf.Clamp(num2 - 1, 0, this.podiumColors.Length);
+				position = Mathf.Clamp(position - 1, 0, this.podiumColors.Length);
 				this.backing.enabled = true;
-				this.backing.color = this.podiumColors[num2];
+				this.backing.color = this.podiumColors[position];
 			}
 			else
 			{
