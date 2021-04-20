@@ -20,7 +20,7 @@ public class UITopBarDriverEntry : MonoBehaviour
 			int currentChampionshipPosition = inEntry.GetCurrentChampionshipPosition();
 			this.colorStripe.color = this.mTeam.GetTeamColor().primaryUIColour.normal;
 			this.positionLabel.text = currentChampionshipPosition.ToString();
-			this.nameLabel.text = this.mDriver.lastName;
+			this.nameLabel.text = this.mDriver.shortName;
 			this.pointsLabel.text = inEntry.GetCurrentPoints().ToString();
 			int count = inEntry.championship.calendar.Count;
 			int itemCount = this.eventPointsList.itemCount;
