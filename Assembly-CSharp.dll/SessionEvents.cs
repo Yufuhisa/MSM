@@ -266,7 +266,7 @@ public class SessionEvents : InstanceCounter
 	
 	private bool IsReadyToCrash() {
 		
-		float crashChance = 0.0005f;
+		float crashChance = 0.0004f;
 
 		Weather.RainType rainType = Game.instance.sessionManager.currentSessionWeather.GetCurrentWeather().rainType;
 		Weather.WaterLevel trackWaterType = Game.instance.sessionManager.currentSessionWeather.waterLevel;
@@ -278,7 +278,7 @@ public class SessionEvents : InstanceCounter
 
 		// crashHappy drivers have double crash chance
 		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {43}))
-			crashChance *= 2f;
+			crashChance *= 1.75f;
 		// rockSolid drivers have half crash chance
 		if (this.mVehicle.driver.personalityTraitController.HasTrait(false, new int[] {44}))
 			crashChance *= 0.5f;
