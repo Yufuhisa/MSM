@@ -115,7 +115,14 @@ public static class GameStatsConstants
 		403,
 		404,
 		406,
-		407
+		407,
+		408,
+		409,
+		411,
+		412,
+		413,
+		414,
+		415
 	};
 
 	public static int[] criticalInjuryTraits = new int[]
@@ -131,7 +138,14 @@ public static class GameStatsConstants
 		403, // use testdriver in race (workarround for AI to use testdriver) - 16 weeks
 		404, // use testdriver in race (workarround for AI to use testdriver) - 23 weeks
 		406, // brocken legs - 16 weeks
-		407  // brocken hand - 3 weeks
+		407, // brocken hand - 3 weeks
+		408, // appendixitis - 3 weeks
+		409, // back pain - 3 weeks
+		411, // use testdriver in race (workarround for AI to use testdriver) - 6 weeks
+		412, // sharing cockpit (workarround for AI to use testdriver) - 15 weeks
+		413, // sharing cockpit (workarround for AI to use testdriver) - 15 weeks
+		414, // sharing cockpit (workarround for AI to use testdriver) - 17 weeks
+		415, // sharing cockpit (workarround for AI to use testdriver) - 22 weeks
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;
