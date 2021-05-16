@@ -1335,113 +1335,40 @@ public class SessionStrategy : InstanceCounter
 		return result;
 	}
 
-	private TyreSet GetTreadedTyre(TyreSet.Tread inTread, SessionDetails.SessionType inSessionType, float inNormalizedTime)
-	{
-		TyreSet result = null;
-		if (inTread != TyreSet.Tread.LightTread)
-		{
-			if (inTread == TyreSet.Tread.HeavyTread)
-			{
-				result = this.GetTyreInBestCondition(SessionStrategy.TyreOption.Wets, null);
-				if (this.GetMintConditionTyreCount(SessionStrategy.TyreOption.Wets) < 3)
-				{
-					result = this.GetTyreInBestCondition(SessionStrategy.TyreOption.Intermediates, null);
-					if (this.GetMintConditionTyreCount(SessionStrategy.TyreOption.Intermediates) < 3)
-					{
-						result = this.GetSlickTyre(inSessionType, inNormalizedTime);
-					}
-				}
-			}
-		}
-		else
-		{
-			result = this.GetTyreInBestCondition(SessionStrategy.TyreOption.Intermediates, null);
-			if (this.GetMintConditionTyreCount(SessionStrategy.TyreOption.Intermediates) < 3)
-			{
-				result = this.GetTyreInBestCondition(SessionStrategy.TyreOption.Wets, null);
-				if (this.GetMintConditionTyreCount(SessionStrategy.TyreOption.Wets) < 3)
-				{
-					result = this.GetSlickTyre(inSessionType, inNormalizedTime);
-				}
-			}
-		}
-		return result;
-	}
-
-	private TyreSet GetSlickTyre(SessionDetails.SessionType inSessionType, float inNormalizedTime)
-	{
-		ChampionshipRules rules = this.mChampionship.rules;
-		TyreSet result = null;
-		if (inSessionType == SessionDetails.SessionType.Practice)
-		{
-			bool[] array = new bool[rules.compoundsAvailable];
-			int num = 0;
-			for (int i = 0; i < rules.compoundsAvailable; i++)
-			{
-				array[i] = true;
-				if (array[i] && i < rules.compoundsAvailable - 1 && (this.GetMintConditionTyreCount((SessionStrategy.TyreOption)i) <= 2 || this.GetTyreCount((SessionStrategy.TyreOption)i) <= 3))
-				{
-					array[i] = false;
-				}
-				if (array[i])
-				{
-					num++;
-				}
-			}
-			SessionStrategy.TyreOption[] array2 = new SessionStrategy.TyreOption[num];
-			int num2 = 0;
-			for (int j = 0; j < rules.compoundsAvailable; j++)
-			{
-				if (array[j])
-				{
-					array2[num2] = (SessionStrategy.TyreOption)j;
-					num2++;
-				}
-			}
-			TyreSet[] array3 = new TyreSet[array2.Length];
-			for (int k = 0; k < array2.Length; k++)
-			{
-				array3[k] = this.GetTyreInBestCondition(array2[k], null);
-			}
-			TyreSet tyreSet = array3[0];
-			bool flag = tyreSet.GetCondition() > 0.5f;
-			for (int l = 1; l < array3.Length; l++)
-			{
-				if (array3[l].GetCondition() < 0.5f)
-				{
-					flag = false;
-				}
-				if (tyreSet.GetCondition() < array3[l].GetCondition())
-				{
-					tyreSet = array3[l];
-				}
-			}
-			if (flag)
-			{
-				int random = RandomUtility.GetRandom(0, array3.Length);
-				result = array3[random];
-			}
-			else
-			{
-				result = tyreSet;
-			}
-		}
-		return result;
-	}
-
 	private TyreSet GetTyresForPractice(float inNormalizedTime)
 	{
+		float minTyreCondition = 0.5f;
+
+		// select tyre type for weather
 		TyreSet.Tread recommendedTreadForTime = SessionStrategy.GetRecommendedTreadForTime(inNormalizedTime);
-		TyreSet result;
-		if (recommendedTreadForTime == TyreSet.Tread.Slick)
+		SessionStrategy.TyreOption nextTyreOption;
+		switch(recommendedTreadForTime)
 		{
-			result = this.GetSlickTyre(SessionDetails.SessionType.Practice, inNormalizedTime);
+			case TyreSet.Tread.LightTread:
+				nextTyreOption = SessionStrategy.TyreOption.Intermediates;
+				break;
+			case TyreSet.Tread.HeavyTread:
+				nextTyreOption = SessionStrategy.TyreOption.Wets;
+				break;
+			default:
+				// select first or second choise tyre by random (third is never not used in mod)
+				if (RandomUtility.GetRandom01() > 0.5f)
+					nextTyreOption = SessionStrategy.TyreOption.First;
+				else
+					nextTyreOption = SessionStrategy.TyreOption.Second;
+				break;
 		}
-		else
-		{
-			result = this.GetTreadedTyre(recommendedTreadForTime, SessionDetails.SessionType.Practice, inNormalizedTime);
+
+		TyreSet[] tyres = this.GetTyres(nextTyreOption);
+		TyreSet tyreForTraining = null;
+
+		// select tyre set with least condition, if above minTyreCondition -> thus reuses tyre sets
+		for (int i = 0; i < tyres.Length; i++) {
+			if (tyreForTraining == null || (tyres[i].GetCondition() > minTyreCondition && tyres[i].GetCondition() < tyreForTraining.GetCondition()))
+				tyreForTraining = tyres[i];
 		}
-		return result;
+
+		return tyreForTraining;
 	}
 
 	private TyreSet GetTyresForQualifying(float inNormalizedTime)
