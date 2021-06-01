@@ -125,22 +125,8 @@ public class UISupplierPanelWidget : MonoBehaviour
 	public void SetupSupplierOptions(Supplier.SupplierType inType)
 	{
 		this.mRightAnim = true;
-		this.mSuppliers = new List<Supplier>();
-		switch (inType)
-		{
-		case Supplier.SupplierType.Engine:
-			this.mSuppliers = Game.instance.supplierManager.engineSuppliers;
-			break;
-		case Supplier.SupplierType.Brakes:
-			this.mSuppliers = Game.instance.supplierManager.brakesSuppliers;
-			break;
-		case Supplier.SupplierType.Fuel:
-			this.mSuppliers = Game.instance.supplierManager.fuelSuppliers;
-			break;
-		case Supplier.SupplierType.Materials:
-			this.mSuppliers = Game.instance.supplierManager.materialsSuppliers;
-			break;
-		}
+		this.mSuppliers = Game.instance.supplierManager.GetSupplierList(inType);
+
 		this.chooseSupplierLabel.text = "Choose a " + Localisation.LocaliseEnum(inType) + " Supplier";
 		this.chooseButtonSupplierLabel.text = "Select " + Localisation.LocaliseEnum(inType) + " Supplier";
 		CarDesignScreen screen = UIManager.instance.GetScreen<CarDesignScreen>();

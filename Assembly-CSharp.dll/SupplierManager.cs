@@ -35,6 +35,8 @@ public class SupplierManager : InstanceCounter
 				int num = 1000000;
 				Supplier supplier = new Supplier();
 				supplier.id = databaseEntry.GetIntValue("ID");
+				//supplier.startYear = databaseEntry.GetIntValue("Start Year");
+				//supplier.endYear = databaseEntry.GetIntValue("End Year");
 				supplier.logoIndex = databaseEntry.GetIntValue("Logo ID");
 				supplier.name = databaseEntry.GetStringValue("Company Name");
 				supplier.price = Mathf.RoundToInt(databaseEntry.GetFloatValue("Price") * (float)num);
@@ -113,6 +115,10 @@ public class SupplierManager : InstanceCounter
 
 	public List<Supplier> GetSupplierList(Supplier.SupplierType inType)
 	{
+		
+		//int currentYear = GameTimer.now.year;
+		//List<Supplier> returnSupplier = new List<Supplier>();
+		
 		switch (inType)
 		{
 		case Supplier.SupplierType.Engine:
@@ -318,17 +324,17 @@ public class SupplierManager : InstanceCounter
 		}
 	}
 
-	public List<Supplier> engineSuppliers = new List<Supplier>();
+	private List<Supplier> engineSuppliers = new List<Supplier>();
 
-	public List<Supplier> brakesSuppliers = new List<Supplier>();
+	private List<Supplier> brakesSuppliers = new List<Supplier>();
 
-	public List<Supplier> materialsSuppliers = new List<Supplier>();
+	private List<Supplier> materialsSuppliers = new List<Supplier>();
 
-	public List<Supplier> fuelSuppliers = new List<Supplier>();
+	private List<Supplier> fuelSuppliers = new List<Supplier>();
 
-	public List<Supplier> batterySuppliers = new List<Supplier>();
+	private List<Supplier> batterySuppliers = new List<Supplier>();
 
-	public List<Supplier> ersAdvancedSuppliers = new List<Supplier>();
+	private List<Supplier> ersAdvancedSuppliers = new List<Supplier>();
 
 	private List<Supplier> mSuppliers = new List<Supplier>();
 }

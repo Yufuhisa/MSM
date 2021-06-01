@@ -70,30 +70,11 @@ public class UISupplierSelectionStep : MonoBehaviour
 	private void SetHighlightStats()
 	{
 		Supplier supplier = null;
-		switch (this.supplierType)
-		{
-		case Supplier.SupplierType.Engine:
-			supplier = Game.instance.supplierManager.engineSuppliers[0];
-			break;
-		case Supplier.SupplierType.Brakes:
-			supplier = Game.instance.supplierManager.brakesSuppliers[0];
-			break;
-		case Supplier.SupplierType.Fuel:
-			supplier = Game.instance.supplierManager.fuelSuppliers[0];
-			break;
-		case Supplier.SupplierType.Materials:
-			supplier = Game.instance.supplierManager.materialsSuppliers[0];
-			break;
-		case Supplier.SupplierType.Battery:
-			supplier = Game.instance.supplierManager.batterySuppliers[0];
-			break;
-		case Supplier.SupplierType.ERSAdvanced:
-			if (Game.instance.supplierManager.ersAdvancedSuppliers.Count > 0)
-			{
-				supplier = Game.instance.supplierManager.ersAdvancedSuppliers[0];
-			}
-			break;
-		}
+		
+		List<Supplier> supplierList = Game.instance.supplierManager.GetSupplierList(this.supplierType);
+		if (supplierList.Count > 0)
+			supplier = supplierList[0];
+
 		if (supplier != null)
 		{
 			this.mHighlightStats.Clear();
