@@ -229,7 +229,7 @@ public class Vehicle : InstanceCounter
 					{
 						bool flag4 = this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.InOutLap;
 						bool flag5 = vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.InOutLap;
-						bool IsSpinning = (vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin || this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin);
+						bool IsSpinning = (vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin || this.inSpinEvent());
 						if (flag3)
 						{
 							flag4 = (this.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.BlueFlag);
@@ -265,6 +265,7 @@ public class Vehicle : InstanceCounter
 			}
 		}
 		this.mCollisionCooldown -= GameTimer.simulationDeltaTime;
+		this.mAfterSpinCooldown -= GameTimer.simulationDeltaTime;
 	}
 
 	public virtual void OnFlagChange(SessionManager.Flag inFlag)
@@ -578,6 +579,23 @@ public class Vehicle : InstanceCounter
 		}
 	}
 
+	// check if Vehicle is in a spin event (for behaivor checks from other vehicles)
+	public bool inSpinEvent() {
+		// if still spinning
+		if (behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.Spin)
+			return true;
+		// if restarting after spin event
+		if (mAfterSpinCooldown > 0.0001f)
+			return true;
+		return false;
+	}
+
+	// set this if spin event has ended
+	public void setAfterSpin() {
+		mAfterSpinCooldown = 5f;
+		mCollisionCooldown = 6f;
+	}
+
 	public Action OnLapEnd;
 
 	public int id;
@@ -625,6 +643,8 @@ public class Vehicle : InstanceCounter
 	protected float mMaxSpeed = float.MaxValue;
 
 	protected float mCollisionCooldown;
+	
+	protected float mAfterSpinCooldown;
 
 	protected Vector3 mPreviousPosition = Vector3.zero;
 

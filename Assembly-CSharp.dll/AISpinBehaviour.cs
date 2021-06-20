@@ -122,6 +122,7 @@ public class AISpinBehaviour : AIRacingBehaviour
 	public override void OnExit()
 	{
 		base.OnExit();
+		this.mRacingVehicle.setAfterSpin();
 		this.mRacingVehicle.unityVehicle.SetRotationTargetType(UnityVehicle.RotationTarget.ForwardVector);
 		this.mRacingVehicle.behaviourManager.SetCanDefendVehicle(true);
 	}
