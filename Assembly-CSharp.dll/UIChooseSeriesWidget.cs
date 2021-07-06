@@ -45,8 +45,14 @@ public class UIChooseSeriesWidget : MonoBehaviour
 					break;
 				}
 			}
-			GameUtility.SetActive(seriesButton.lockedContainer, !flag);
-			seriesButton.button.interactable = flag;
+			if (seriesButton.series == Championship.Series.SingleSeaterSeries) {
+				GameUtility.SetActive(seriesButton.lockedContainer, false);
+				seriesButton.button.interactable = true;
+			}
+			else {
+				GameUtility.SetActive(seriesButton.lockedContainer, true);
+				seriesButton.button.interactable = false;
+			}
 		}
 	}
 

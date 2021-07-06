@@ -30,18 +30,30 @@ public class UIChooseChampionshipWidget : MonoBehaviour
 		List<Championship> entityList = Game.instance.championshipManager.GetEntityList();
 		for (int k = 0; k < this.series.Length; k++)
 		{
-			GameUtility.SetActive(this.series[k].gameObject, k < entityList.Count);
 			if (k < entityList.Count)
 			{
 				this.series[k].Setup(entityList[k]);
+				if (this.series[k].championship.championshipID == 0) {
+					GameUtility.SetActive(this.series[k].gameObject, true);
+					this.series[k].toggle.enabled = true;
+					GameUtility.SetActive(this.series[k].toggle.gameObject, true);
+				} else {
+					GameUtility.SetActive(this.series[k].gameObject, false);
+					this.series[k].toggle.enabled = false;
+					GameUtility.SetActive(this.series[k].toggle.gameObject, false);
+				}
+			}
+			else
+			{
+				GameUtility.SetActive(this.series[k].gameObject, false);
 			}
 		}
 		for (int l = 0; l < this.series.Length; l++)
 		{
 			if (this.series[l].championship.series == inSeries && this.series[l].isChoosable)
 			{
-				this.series[l].toggle.isOn = true;
 				this.SetChampionshipData(this.series[l].championship);
+				this.series[l].toggle.isOn = true;
 				break;
 			}
 		}

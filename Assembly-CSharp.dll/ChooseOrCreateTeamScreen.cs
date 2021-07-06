@@ -20,7 +20,8 @@ public class ChooseOrCreateTeamScreen : UIScreen
 		base.OnStart();
 		this.createTeamGetContentButton.onClick.AddListener(new UnityAction(this.OnCreateTeamGetContent));
 		this.chooseTeamButton.onClick.AddListener(new UnityAction(this.OnChooseTeamButton));
-		this.createTeamButton.onClick.AddListener(new UnityAction(this.OnCreateTeamButton));
+		//this.createTeamButton.onClick.AddListener(new UnityAction(this.OnCreateTeamButton));
+		this.createTeamButton.enabled = false;
 	}
 
 	private void OnChooseTeamButton()

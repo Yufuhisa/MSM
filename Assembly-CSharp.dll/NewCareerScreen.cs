@@ -162,18 +162,15 @@ public class NewCareerScreen : UIScreen
 
 	private void StartAllToggles()
 	{
-		switch (App.instance.preferencesManager.GetSettingEnum<PrefGameRaceLength.Type>(Preference.pName.Game_RaceLenghts, false))
-		{
-		case PrefGameRaceLength.Type.Short:
-			this.shortRaceLengthToggle.isOn = true;
-			break;
-		case PrefGameRaceLength.Type.Medium:
-			this.mediumRaceLengthToggle.isOn = true;
-			break;
-		case PrefGameRaceLength.Type.Long:
-			this.longRaceLengthToggle.isOn = true;
-			break;
-		}
+		// mod is for long races only
+		this.shortRaceLengthToggle.interactable = false;
+		this.mediumRaceLengthToggle.interactable = false;
+		this.longRaceLengthToggle.isOn = true;
+
+		// no tutorial for this mod
+		this.tutorialToggle.interactable = false;
+		this.tutorialToggle.isOn = false;
+
 		this.autosave.isOn = App.instance.preferencesManager.GetSettingBool(Preference.pName.Game_Autosave, false);
 	}
 
