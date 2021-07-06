@@ -34,7 +34,7 @@ public class UISupplierOption : MonoBehaviour
 	{
 		Team team = Game.instance.player.team;
 		this.cost.text = GameUtility.GetCurrencyString((long)this.mSupplier.GetPrice(team), 0);
-		GameUtility.SetActive(this.discountDetails, this.mSupplier.HasDiscountWithTeam(team));
+		GameUtility.SetActive(this.discountDetails, this.showDetails());
 		if (this.mSupplier.CanTeamBuyThis(team))
 		{
 			this.canvasGroup.alpha = 1f;
@@ -158,23 +158,38 @@ public class UISupplierOption : MonoBehaviour
 	public void OnDiscountDetailsEnter()
 	{
 		Team team = Game.instance.player.team;
-		if (this.mSupplier.HasDiscountWithTeam(team))
-		{
-			GenericInfoRollover dialog = UIManager.instance.dialogBoxManager.GetDialog<GenericInfoRollover>();
-			StringVariableParser.supplierOriginalPrice = this.mSupplier.GetPriceNoDiscount(team.championship, team.championship.rules.batterySize);
-			StringVariableParser.supplierDiscountPercent = this.mSupplier.GetTeamDiscount(team);
-			dialog.Open(Localisation.LocaliseID("PSG_10010195", null), Localisation.LocaliseID("PSG_10010196", null));
+
+		GenericInfoRollover dialog = UIManager.instance.dialogBoxManager.GetDialog<GenericInfoRollover>();
+		StringVariableParser.supplierOriginalPrice = this.mSupplier.GetPriceNoDiscount(team.championship, team.championship.rules.batterySize);
+		StringVariableParser.supplierDiscountPercent = this.mSupplier.GetTeamDiscount(team);
+
+		string header = "Engine Details";
+		// header = Localisation.LocaliseID("PSG_10010195", null); - "Discounted Price"
+
+		string description = string.Empty;
+		
+		if (this.mSupplier.supplierType == Supplier.SupplierType.Engine)
+			description += "<color=yellow>Engine-Type: " + this.mSupplier.model + "</color>";
+
+		if (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team)) {
+			if (description != string.Empty)
+				description += "\n";
+			description += Localisation.LocaliseID("PSG_10010196", null);
 		}
+
+		dialog.Open(header, description);
 	}
 
 	public void OnDiscountDetailsExit()
 	{
 		Team team = Game.instance.player.team;
-		if (this.mSupplier.HasDiscountWithTeam(team))
-		{
-			GenericInfoRollover dialog = UIManager.instance.dialogBoxManager.GetDialog<GenericInfoRollover>();
-			dialog.Hide();
-		}
+		GenericInfoRollover dialog = UIManager.instance.dialogBoxManager.GetDialog<GenericInfoRollover>();
+		dialog.Hide();
+	}
+
+	private bool showDetails ()
+	{
+		return (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team) || this.mSupplier.supplierType == Supplier.SupplierType.Engine);
 	}
 
 	public UISupplierLogoWidget supplierLogoWidget;

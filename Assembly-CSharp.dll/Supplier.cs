@@ -162,6 +162,14 @@ public class Supplier
 
 	public int id;
 
+	public int startYear;
+
+	public int endYear;
+
+	public int minRang;
+
+	public string model = string.Empty;
+
 	public int logoIndex;
 
 	public int minEngineLevelModifier;

@@ -35,8 +35,10 @@ public class SupplierManager : InstanceCounter
 				int num = 1000000;
 				Supplier supplier = new Supplier();
 				supplier.id = databaseEntry.GetIntValue("ID");
-				//supplier.startYear = databaseEntry.GetIntValue("Start Year");
-				//supplier.endYear = databaseEntry.GetIntValue("End Year");
+				supplier.startYear = databaseEntry.GetIntValue("Start Year");
+				supplier.endYear = databaseEntry.GetIntValue("End Year");
+				supplier.model = databaseEntry.GetStringValue("Model");
+				supplier.minRang = databaseEntry.GetIntValue("Min Rank");
 				supplier.logoIndex = databaseEntry.GetIntValue("Logo ID");
 				supplier.name = databaseEntry.GetStringValue("Company Name");
 				supplier.price = Mathf.RoundToInt(databaseEntry.GetFloatValue("Price") * (float)num);
@@ -115,27 +117,41 @@ public class SupplierManager : InstanceCounter
 
 	public List<Supplier> GetSupplierList(Supplier.SupplierType inType)
 	{
-		
-		//int currentYear = GameTimer.now.year;
-		//List<Supplier> returnSupplier = new List<Supplier>();
-		
+
+		int selectionYear = Game.instance.time.now.Year + 1; // select supplier in december of year before next season
+		List<Supplier> typeSupplier;
+		List<Supplier> returnSupplier = new List<Supplier>();
+
 		switch (inType)
 		{
 		case Supplier.SupplierType.Engine:
-			return this.engineSuppliers;
+			typeSupplier = this.engineSuppliers;
+			break;
 		case Supplier.SupplierType.Brakes:
-			return this.brakesSuppliers;
+			typeSupplier = this.brakesSuppliers;
+			break;
 		case Supplier.SupplierType.Fuel:
-			return this.fuelSuppliers;
+			typeSupplier = this.fuelSuppliers;
+			break;
 		case Supplier.SupplierType.Materials:
-			return this.materialsSuppliers;
+			typeSupplier = this.materialsSuppliers;
+			break;
 		case Supplier.SupplierType.Battery:
-			return this.batterySuppliers;
+			typeSupplier = this.batterySuppliers;
+			break;
 		case Supplier.SupplierType.ERSAdvanced:
-			return this.ersAdvancedSuppliers;
+			typeSupplier = this.ersAdvancedSuppliers;
+			break;
 		default:
 			return null;
 		}
+
+		for (int i = 0; i < typeSupplier.Count; i++) {
+			if ((typeSupplier[i].startYear <= selectionYear) && (selectionYear <= typeSupplier[i].endYear))
+				returnSupplier.Add(typeSupplier[i]);
+		}
+
+		return returnSupplier;
 	}
 
 	private void AddBoundaries(Supplier inSupplier, DatabaseEntry data, bool inIsMinBoundary)
@@ -242,40 +258,21 @@ public class SupplierManager : InstanceCounter
 	{
 		int championshipID = inTeam.championship.championshipID;
 		int num = championshipID + 1;
-		List<Supplier> list = new List<Supplier>();
-		switch (inSupplierType)
-		{
-		case Supplier.SupplierType.Engine:
-			list = this.engineSuppliers;
-			break;
-		case Supplier.SupplierType.Brakes:
-			list = this.brakesSuppliers;
-			break;
-		case Supplier.SupplierType.Fuel:
-			list = this.fuelSuppliers;
-			break;
-		case Supplier.SupplierType.Materials:
-			list = this.materialsSuppliers;
-			break;
-		case Supplier.SupplierType.Battery:
-			list = this.batterySuppliers;
-			break;
-		case Supplier.SupplierType.ERSAdvanced:
-			list = this.ersAdvancedSuppliers;
-			break;
-		}
+		List<Supplier> list = this.GetSupplierList(inSupplierType);
+
 		List<Supplier> list2 = new List<Supplier>();
 		for (int i = list.Count - 1; i >= 0; i--)
 		{
 			bool flag = true;
-			if (checkCanBuy)
-			{
-				flag = list[i].CanTeamBuyThis(inTeam);
-			}
+			// check if team is allowed to buy from this supplier
+			if (checkCanBuy && !list[i].CanTeamBuyThis(inTeam))
+				flag = false;
+			// for engines in tier 1 check if team rang ist high enough for this supplier
+			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1 && list[i].minRang != 0 && list[i].minRang < inTeam.GetChampionshipEntry().GetCurrentChampionshipPosition())
+				flag = false;
+
 			if (flag && list[i].tier == num)
-			{
 				list2.Add(list[i]);
-			}
 		}
 		return list2;
 	}

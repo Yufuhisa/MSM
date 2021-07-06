@@ -26,7 +26,7 @@ public class UISupplierSelectionEntry : MonoBehaviour
 
 	public void OnEnter()
 	{
-		List<Supplier> suppliersForTeam = Game.instance.supplierManager.GetSuppliersForTeam(this.mSupplierType, Game.instance.player.team, false);
+		List<Supplier> suppliersForTeam = Game.instance.supplierManager.GetSuppliersForTeam(this.mSupplierType, Game.instance.player.team, true);
 		this.supplierOptionsEntries.HideListItems();
 		ToggleGroup component = this.supplierOptionsEntries.grid.GetComponent<ToggleGroup>();
 		for (int i = 0; i < suppliersForTeam.Count; i++)
