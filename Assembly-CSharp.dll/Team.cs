@@ -662,6 +662,10 @@ public class Team : Entity
 	{
 		this.carManager.Update();
 		this.UpdateHeadquarters();
+		// for F1 update engineer contribution for next year team chassi
+		if (this.championship.series == Championship.Series.SingleSeaterSeries && this.championship.championshipID == 0)
+			// TODO: only mid season
+			Game.instance.supplierManager.UpdateChassiContribution(this);
 	}
 
 	private void UpdateHeadquarters()

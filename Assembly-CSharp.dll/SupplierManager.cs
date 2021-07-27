@@ -39,6 +39,7 @@ public class SupplierManager : InstanceCounter
 				supplier.endYear = databaseEntry.GetIntValue("End Year");
 				supplier.model = databaseEntry.GetStringValue("Model");
 				supplier.minRang = databaseEntry.GetIntValue("Min Rank");
+				supplier.teamID = databaseEntry.GetIntValue("Team ID");
 				supplier.logoIndex = databaseEntry.GetIntValue("Logo ID");
 				supplier.name = databaseEntry.GetStringValue("Company Name");
 				supplier.price = Mathf.RoundToInt(databaseEntry.GetFloatValue("Price") * (float)num);
@@ -113,6 +114,176 @@ public class SupplierManager : InstanceCounter
 			inID
 		});
 		return null;
+	}
+
+	// get the team chassi supplier
+	private Supplier getChassiSupplierForTeam(Team inTeam) {
+		List<Supplier> chassiSupplier = this.GetSupplierList(Supplier.SupplierType.Materials);
+		for (int i = 0; i < chassiSupplier.Count; i++) {
+			if (chassiSupplier[i].teamID == (inTeam.teamID + 2)) // Team IDs in Database files are 2 higher than in Team Class, whyever
+				return chassiSupplier[i];
+		}
+		return null;
+	}
+
+	// initialize chassi development for next season
+	// Team.championship.OnSeasonStart() <- Bei Spielstart und PreSeasonEnd aufgerufen
+	public void InitializeChasiDevelopment(Team inTeam) {
+		// get Team chassi supplier
+		global::Debug.LogErrorFormat("Initilize Chassi Supplier for Team {0}, ID {1}", new object[] { inTeam.GetShortName(false), inTeam.teamID });
+		Supplier chassiSupplier = getChassiSupplierForTeam(inTeam);
+		if (chassiSupplier == null) {
+			global::Debug.LogErrorFormat("No ChassiSupplier for Team {0} found", new object[] { inTeam.GetShortName(false) });
+			return;
+		}
+		// initialize development boni
+		chassiSupplier.chassiDevelopmentEngineerBonus = 0f;
+		chassiSupplier.chassiDevelopmentTestDriverBonus = 0f;
+		chassiSupplier.chassiDevelopmentInvestedMoney = 0f;
+		chassiSupplier.chassiDevelopmentLastUpdate = Game.instance.time.now;
+	}
+
+	// update mid season chassi development
+	// Team.Update()
+	public void UpdateChassiContribution(Team inTeam) {
+		DateTime now = Game.instance.time.now;
+		DateTime seasonStart = inTeam.championship.calendar[0].eventDate.AddDays(-11.0);
+		DateTime seasonEnd = inTeam.championship.currentSeasonEndDate;
+
+		// if not in season -> do nothing
+		if (now < seasonStart || now > seasonEnd) {
+			global::Debug.LogErrorFormat("UpdateChassiContribution, not in Season, date: {0}, SeasonStart: {1}, SeasonEnd {2} ", new object[] { now, seasonStart, seasonEnd });
+			return;
+		}
+
+		// get Team chassi supplier
+		Supplier chassiSupplier = getChassiSupplierForTeam(inTeam);
+		if (chassiSupplier == null) {
+			global::Debug.LogErrorFormat("No ChassiSupplier for Team {0} found", new object[] { inTeam.GetShortName(false) });
+			return;
+		}
+
+		if (chassiSupplier.chassiDevelopmentLastUpdate < seasonStart)
+			chassiSupplier.chassiDevelopmentLastUpdate = seasonStart;
+
+		// check if last update was at least 1 day ago
+		float daysSinceLastUpdate = (now - chassiSupplier.chassiDevelopmentLastUpdate).Days;
+		if (daysSinceLastUpdate <= 0) {
+			//global::Debug.LogErrorFormat("UpdateChassiContribution, daysSinceLastUpdate: {0} ", new object[] { daysSinceLastUpdate });
+			return;
+		}
+
+		// calculate development time for this season
+		float seasonDays = (seasonEnd - seasonStart).Days;
+		float devTime = daysSinceLastUpdate / seasonDays;
+		//global::Debug.LogErrorFormat("Update chassi dev with value: {0} Days for Team {1}", new object[] { devTime.ToString("R"), inTeam.GetShortName(false) });
+
+		global::Debug.LogErrorFormat("UpdateChassiContribution, for Team {0} on day {1} for {2} days", new object[] { inTeam.GetShortName(false), now, daysSinceLastUpdate });
+
+		// Calculate Engineer Bonus
+		Engineer engineer = inTeam.contractManager.GetPersonOnJob<Engineer>(Contract.Job.EngineerLead);
+		if (engineer != null) {
+			float engineerBonus = engineer.stats.GetTotal() / 6 * devTime;
+			chassiSupplier.chassiDevelopmentEngineerBonus += engineerBonus;
+			global::Debug.LogErrorFormat("Update EngineerBonus by {0}", new object[] { engineerBonus.ToString("R") });
+		}
+		// Test Driver - Feedback
+		Driver testDriver = inTeam.GetReserveDriver();
+		if (testDriver != null) {
+			float testDriverBonus = testDriver.GetDriverStats().feedback * devTime;
+			chassiSupplier.chassiDevelopmentTestDriverBonus += testDriverBonus;
+			global::Debug.LogErrorFormat("Update DriverBonus by {0}", new object[] { testDriverBonus.ToString("R") });
+		}
+
+		chassiSupplier.chassiDevelopmentLastUpdate = Game.instance.time.now;
+	}
+
+	private void distributePointsToChassiSupplier(Supplier inSupplier, float inPoints) {
+		// 25% for each attribute, but at least 1
+		float tyreWear    = Convert.ToSingle(Math.Min(Math.Round(inPoints / 4f, MidpointRounding.AwayFromZero), 1f));
+		float tyreHeating = Convert.ToSingle(Math.Min(Math.Round(inPoints / 4f, MidpointRounding.AwayFromZero), 1f));
+
+		// reduce remaining points for distributed values
+		inPoints = inPoints - tyreWear - tyreHeating;
+
+		// randomly assing remaining points for first attribute
+		float pointsForFirst = Convert.ToSingle(Math.Min(tyreWear + RandomUtility.GetRandom(0f,inPoints), 10f)) - tyreWear;
+		tyreWear += pointsForFirst;
+
+		// assing remaining points for second attribute
+		tyreHeating += inPoints - pointsForFirst;
+
+		inSupplier.supplierStats.Remove(CarChassisStats.Stats.TyreWear);
+		inSupplier.supplierStats.Remove(CarChassisStats.Stats.TyreHeating);
+
+		inSupplier.supplierStats.Add(CarChassisStats.Stats.TyreWear, tyreWear);
+		inSupplier.supplierStats.Add(CarChassisStats.Stats.TyreHeating, tyreHeating);
+	}
+
+	public void UpdateDefaultChassisOnSeasonEnd() {
+		List<Supplier> defaultChassiSupplier = new List<Supplier>();
+
+		defaultChassiSupplier.Add(this.GetSupplierByID(319)); // Lola
+		defaultChassiSupplier.Add(this.GetSupplierByID(320)); // dallara
+		defaultChassiSupplier.Add(this.GetSupplierByID(321)); // reynard
+
+		Supplier top = defaultChassiSupplier[RandomUtility.GetRandom(0,2)];
+		defaultChassiSupplier.Remove(top);
+
+		Supplier mid = defaultChassiSupplier[RandomUtility.GetRandom(0,1)];
+		defaultChassiSupplier.Remove(mid);
+
+		Supplier bottom = defaultChassiSupplier[0];
+
+		top.price    = 7000000;
+		mid.price    = 5000000;
+		bottom.price = 3000000;
+
+		this.distributePointsToChassiSupplier(top, 8f);
+		this.distributePointsToChassiSupplier(mid, 5f);
+		this.distributePointsToChassiSupplier(bottom, 3f);
+	}
+
+	// Update invested money for car development
+	// get from inTeam.financeController.moneyForCarDev
+	public void UpdateChassiContributionOnSeasonEnd(Team inTeam) {
+		// get Team chassi supplier
+		Supplier chassiSupplier = getChassiSupplierForTeam(inTeam);
+		if (chassiSupplier == null) {
+			global::Debug.LogErrorFormat("No ChassiSupplier for Team {0} found", new object[] { inTeam.GetShortName(false) });
+			return;
+		}
+
+		// calculate chassi points from investment (everything above 10Mio, up to 10Mio total = 20 Points)
+		float investment = (float)inTeam.financeController.moneyForCarDev;
+		chassiSupplier.chassiDevelopmentInvestedMoney = (investment - 10000000f) / 10000000f * 20f;
+
+		chassiSupplier.price = 2000000;
+
+		float teamChassiPoints = 0f;
+		teamChassiPoints += chassiSupplier.chassiDevelopmentEngineerBonus * 0.5f;
+		teamChassiPoints += chassiSupplier.chassiDevelopmentTestDriverBonus * 0.15f;
+		teamChassiPoints += chassiSupplier.chassiDevelopmentInvestedMoney * 0.35f;
+
+		this.distributePointsToChassiSupplier(chassiSupplier, teamChassiPoints);
+
+		// Low -> keine Entwicklung
+		// Medion -> ???
+		// High -> ???
+		
+		// TeamFinanceController.NextYearCarInvestement =
+		// 10.000.000 - 15.000.000 - 20.000.000
+
+		// 4 Mio für billig Chassi
+		// Random: 3 5 8 Punkte
+
+		// 6 Mio für selbst entwickelt
+
+		// 2 Mio für Matialkosten
+		// 35% Investition + 15% Testfahrer (weniger) + 50% Engineer
+		// Maximal 20 Punkte (10 + 10)
+		// 25% auf beide, 50% random
+		// Minimum 1 + 1
 	}
 
 	public List<Supplier> GetSupplierList(Supplier.SupplierType inType)
@@ -263,12 +434,21 @@ public class SupplierManager : InstanceCounter
 		List<Supplier> list2 = new List<Supplier>();
 		for (int i = list.Count - 1; i >= 0; i--)
 		{
+/*
+			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1) {
+				global::Debug.LogErrorFormat("Check Teamsupplier, Team: {0}, Rang: {1}, Engine: {2}, MinRang: {3}", new object[] { inTeam.GetShortName(false) ,inTeam.GetChampionshipEntry().GetCurrentChampionshipPosition() ,list[i].model ,list[i].minRang });
+			}
+*/
 			bool flag = true;
 			// check if team is allowed to buy from this supplier
 			if (checkCanBuy && !list[i].CanTeamBuyThis(inTeam))
 				flag = false;
 			// for engines in tier 1 check if team rang ist high enough for this supplier
-			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1 && list[i].minRang != 0 && list[i].minRang < inTeam.GetChampionshipEntry().GetCurrentChampionshipPosition())
+			int teamLastRank = 12;
+			if (inTeam.history.HasPreviousSeasonHistory()) {
+				teamLastRank = inTeam.history.previousSeasonTeamResult;
+			}
+			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1 && list[i].minRang != 0 && list[i].minRang < teamLastRank)
 				flag = false;
 
 			if (flag && list[i].tier == num)

@@ -133,6 +133,9 @@ public class UISupplierOption : MonoBehaviour
 			inLabel.color = UIConstants.negativeColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010188", null);
 		}
+
+		// add value to general quality description (only for testing purpose?)
+		inLabel.text += " (" + inValue.ToString("0.0") + ")";
 	}
 
 	public void OnMouseEnter()
@@ -163,15 +166,23 @@ public class UISupplierOption : MonoBehaviour
 		StringVariableParser.supplierOriginalPrice = this.mSupplier.GetPriceNoDiscount(team.championship, team.championship.rules.batterySize);
 		StringVariableParser.supplierDiscountPercent = this.mSupplier.GetTeamDiscount(team);
 
-		string header = "Engine Details";
-		// header = Localisation.LocaliseID("PSG_10010195", null); - "Discounted Price"
-
+		string header = string.Empty;
 		string description = string.Empty;
-		
-		if (this.mSupplier.supplierType == Supplier.SupplierType.Engine)
-			description += "<color=yellow>Engine-Type: " + this.mSupplier.model + "</color>";
 
+		if (this.mSupplier.supplierType == Supplier.SupplierType.Engine) {
+			header = "Engine Details";
+			description += "<color=yellow>Engine-Type: " + this.mSupplier.model + "</color>";
+		} else if (this.mSupplier.supplierType == Supplier.SupplierType.Materials) {
+			header = "Chassi Details";
+			description += "Engineer Bonus: " + this.mSupplier.chassiDevelopmentEngineerBonus;
+			description += "\nDriver Bonus: " + this.mSupplier.chassiDevelopmentTestDriverBonus;
+			description += "\nInvested Bonus: " + this.mSupplier.chassiDevelopmentInvestedMoney;
+		}
+
+		// add discount
 		if (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team)) {
+			if (description != string.Empty)
+				header = Localisation.LocaliseID("PSG_10010195", null);
 			if (description != string.Empty)
 				description += "\n";
 			description += Localisation.LocaliseID("PSG_10010196", null);
@@ -189,7 +200,7 @@ public class UISupplierOption : MonoBehaviour
 
 	private bool showDetails ()
 	{
-		return (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team) || this.mSupplier.supplierType == Supplier.SupplierType.Engine);
+		return (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team) || this.mSupplier.supplierType == Supplier.SupplierType.Engine || this.mSupplier.supplierType == Supplier.SupplierType.Materials);
 	}
 
 	public UISupplierLogoWidget supplierLogoWidget;

@@ -170,6 +170,14 @@ public class Supplier
 
 	public string model = string.Empty;
 
+	// values for chassi development (for team chassi suppliers only)
+	public float    chassiDevelopmentEngineerBonus;
+	public float    chassiDevelopmentTestDriverBonus;
+	public float    chassiDevelopmentInvestedMoney;
+	public DateTime chassiDevelopmentLastUpdate;
+
+	public int teamID;
+
 	public int logoIndex;
 
 	public int minEngineLevelModifier;

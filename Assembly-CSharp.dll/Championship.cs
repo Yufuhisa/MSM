@@ -314,6 +314,9 @@ public class Championship : Entity
 		{
 			Team entity = this.standings.GetTeamEntry(i).GetEntity<Team>();
 			entity.carManager.carPartDesign.OnNewSeasonStart();
+			// initialize chassi development for F1 Teams
+			if (this.series == Championship.Series.SingleSeaterSeries && this.championshipID == 0)
+				Game.instance.supplierManager.InitializeChasiDevelopment(entity);
 		}
 		for (int j = 0; j < teamEntryCount; j++)
 		{
@@ -354,8 +357,20 @@ public class Championship : Entity
 		}
 	}
 
+	private void UpdateTeamChassi() {
+		// Team chassis only exist for F1 Teams
+		if (this.championshipID == 0) {
+			Game.instance.supplierManager.UpdateDefaultChassisOnSeasonEnd();
+			List<Team> list = this.standings.GetTeamList();
+			foreach(Team team in list) {
+				Game.instance.supplierManager.UpdateChassiContributionOnSeasonEnd(team);
+			}
+		}
+	}
+
 	public void OnSeasonEnd()
 	{
+		this.UpdateTeamChassi();
 		this.standings.UpdateStandings();
 		this.standingsHistory.AddEntry();
 		this.HandoutPrizeMoney();
@@ -1253,8 +1268,7 @@ public class Championship : Entity
 		RaceEventDetails previousEventDetails = this.GetPreviousEventDetails();
 		RaceEventDetails currentEventDetails = this.GetCurrentEventDetails();
 		DateTime eventDate = currentEventDetails.eventDate;
-		DateTime eventDate2;
-		eventDate2..ctor(Game.instance.time.now.Year, 3, 10);
+		DateTime eventDate2 = new DateTime(Game.instance.time.now.Year, 3, 10);
 		if (previousEventDetails != null)
 		{
 			eventDate2 = previousEventDetails.eventDate;
@@ -1337,10 +1351,6 @@ public class Championship : Entity
 			if (Game.instance.player.team.name == "Predator Racing Group")
 			{
 				steamAchievementsManager.UnlockAchievement(Achievements.AchievementEnum.Win_Driver_Champ_Predator);
-			}
-			if (this.championshipID == 3 && Game.instance.time.now.Year == 2016 && string.Equals(entity.name, "Rafael Rodrigues", 3) && Game.instance.player.team.name == "Oranje GT")
-			{
-				steamAchievementsManager.UnlockAchievement(Achievements.AchievementEnum.Rafael_Win_2016_IGTC_Driver_as_Oranje);
 			}
 			this.OnPlayerWinsAnyChampionshipAchievements();
 		}
