@@ -190,23 +190,37 @@ public class CarPartCondition
 	// calculate possibility for spontanous breakdown
 	public float GetNextRealConditionLoss(float inCondition, CarPart.PartType inType, RacingVehicle inVehicle)
 	{
+		// fault chance relative to reliablity
+		float baseFaultChance = 0.05f;
+		float[] faultChanceEach5Percent = new float[] {0.00f, 0.07f, 0.06f, 0.05f, 0.04f, 0.05f, 0.06f, 0.07f};
 
-		float ausfallWahrscheinlichkeit;
+		float faultChance = baseFaultChance;
+		float compareReliability = 1f;
 
-		if (this.mPart.stats.reliability >= 0.95f)
-			ausfallWahrscheinlichkeit = 0.0007f;
-		if (this.mPart.stats.reliability >= 0.9f)
-			ausfallWahrscheinlichkeit = 0.0007f + ((0.95f - this.mPart.stats.reliability) / 0.05f * 0.0006f);
-		else if (this.mPart.stats.reliability >= 0.75f)
-			ausfallWahrscheinlichkeit = 0.0013f + ((0.9f - this.mPart.stats.reliability) / 0.15f * 0.0012f);
-		else if (this.mPart.stats.reliability >= 0.6f)
-			ausfallWahrscheinlichkeit = 0.0025f + ((0.75f - this.mPart.stats.reliability) / 0.15f * 0.0020f);
-		else
-			ausfallWahrscheinlichkeit = 0.0045f;
+		// calculate fault chance for part
+		for (int i = 0; i < faultChanceEach5Percent.Length; i++) {
 
-		if (RandomUtility.GetRandom01() <= ausfallWahrscheinlichkeit)
+			// if reliability higher than next 5% down -> now higher fault chance
+			if (compareReliability <= this.mPart.stats.reliability)
+				break;
+
+			// if reliability difference more than 5% -> add full fault chance for next 5%
+			if ((compareReliability - this.mPart.stats.reliability) >= 0.05f)
+				faultChance += faultChanceEach5Percent[i];
+			else
+				faultChance += faultChanceEach5Percent[i] * (compareReliability - this.mPart.stats.reliability) / 0.05f;
+
+			compareReliability -= 0.05f;
+		}
+
+		// faultChance as percentage
+		faultChance *= 0.01f;
+
+		// if random number within fault chance -> instant part breakdown
+		if (RandomUtility.GetRandom01() <= faultChance)
 			return 1f;
 
+		// if now breakdown calculate partial condition loss
 		return this.GetNextConditionLoss(inCondition, inType, inVehicle);
 	}
 
