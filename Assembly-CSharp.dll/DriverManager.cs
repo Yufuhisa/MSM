@@ -160,11 +160,9 @@ public class DriverManager : PersonManager<Driver>
 			contract.job = Contract.Job.Driver;
 			contract.SetContractState(Contract.ContractStatus.OnGoing);
 			int intValue = inData.GetIntValue("Contract Start");
-			DateTime startDate;
-			startDate..ctor(intValue, 1, 1);
+			DateTime startDate = new DateTime(intValue, 1, 1);
 			int intValue2 = inData.GetIntValue("Contract End");
-			DateTime endDate;
-			endDate..ctor(intValue2, 12, 31);
+			DateTime endDate = new DateTime(intValue2, 12, 31);
 			contract.startDate = startDate;
 			contract.endDate = endDate;
 			contract.optionClauseEndDate = Game.instance.time.now.AddHours(1.0);
@@ -231,7 +229,7 @@ public class DriverManager : PersonManager<Driver>
 			if (!(text == string.Empty))
 			{
 				int num;
-				if (!int.TryParse(text, ref num))
+				if (!int.TryParse(text, out num))
 				{
 					global::Debug.LogWarningFormat("Driver with name {0} has invalid personality trait assigned, with ID {1}", new object[]
 					{
@@ -242,7 +240,7 @@ public class DriverManager : PersonManager<Driver>
 				else if (num != 0)
 				{
 					PersonalityTraitData personalityTraitData;
-					if (!Game.instance.personalityTraitManager.personalityTraits.TryGetValue(num, ref personalityTraitData))
+					if (!Game.instance.personalityTraitManager.personalityTraits.TryGetValue(num, out personalityTraitData))
 					{
 						global::Debug.LogWarningFormat("Driver with name {0} has invalid personality trait assigned, with ID {1}", new object[]
 						{
