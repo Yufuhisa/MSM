@@ -270,7 +270,7 @@ public class TeamAIController
 		long num = this.mTeam.financeController.finance.currentBudget - this.mTeam.financeController.GetRacePaymentValue(TeamFinanceController.RacePaymentType.Medium) * 2L;
 		foreach (List<Supplier> list in inSuppliers)
 		{
-			list.Sort((Supplier x, Supplier y) => x.GetPrice(this.mTeam).CompareTo(y.GetPrice(this.mTeam)));
+			list.Sort((Supplier x, Supplier y) => x.GetQuality().CompareTo(y.GetQuality()));
 		}
 		long num2 = 0L;
 		int num3 = -1;
@@ -1008,14 +1008,19 @@ public class TeamAIController
 			}
 			this.mRequestFundsCooldown = Game.instance.time.now.AddDays(90.0);
 		}
-		if (this.mTeam.financeController.GetTotalCostPerRace() < 0L)
-		{
-			this.mTeam.financeController.SetCarInvestement(TeamFinanceController.NextYearCarInvestement.Low);
-		}
-		else
-		{
+
+		// decide investment for next year car
+		int eventNumber = this.mTeam.championship.eventNumber;
+		bool positivRaceCost = this.mTeam.financeController.GetTotalCostPerRace() >= 0L;
+		bool meetChairmanExpectation = this.mTeam.GetChampionshipEntry().GetCurrentChampionshipPosition() <= this.mTeam.chairman.expectedTeamChampionshipResult;
+		if (eventNumber == 0)
 			this.mTeam.financeController.SetCarInvestement(TeamFinanceController.NextYearCarInvestement.Medium);
-		}
+		else if (positivRaceCost && meetChairmanExpectation)
+			this.mTeam.financeController.SetCarInvestement(TeamFinanceController.NextYearCarInvestement.High);
+		else if (positivRaceCost || meetChairmanExpectation)
+			this.mTeam.financeController.SetCarInvestement(TeamFinanceController.NextYearCarInvestement.Medium);
+		else
+			this.mTeam.financeController.SetCarInvestement(TeamFinanceController.NextYearCarInvestement.Low);
 	}
 
 	private void CheckForNewSponsorDeals()

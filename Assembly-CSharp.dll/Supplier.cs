@@ -154,6 +154,36 @@ public class Supplier
 		return string.Empty;
 	}
 
+	// get quality of supplier, for TeamAIController, to find best supplier
+	public float GetQuality() {
+		float quality = 0f;
+		switch (this.supplierType) {
+			case Supplier.SupplierType.Engine:
+				quality += this.supplierStats[CarChassisStats.Stats.FuelEfficiency];
+				quality += this.supplierStats[CarChassisStats.Stats.Improvability];
+				// TODO first find how this is influencing engine stats
+				//quality += this.randomEngineLevelModifier;
+				break;
+			case Supplier.SupplierType.Brakes:
+				quality += this.supplierStats[CarChassisStats.Stats.TyreWear];
+				quality += this.supplierStats[CarChassisStats.Stats.TyreHeating];
+				break;
+			case Supplier.SupplierType.Fuel:
+				quality += this.supplierStats[CarChassisStats.Stats.FuelEfficiency];
+				quality += this.supplierStats[CarChassisStats.Stats.Improvability];
+				break;
+			case Supplier.SupplierType.Materials:
+				quality += this.supplierStats[CarChassisStats.Stats.TyreWear];
+				quality += this.supplierStats[CarChassisStats.Stats.TyreHeating];
+				break;
+			case Supplier.SupplierType.Battery:
+				break;
+			case Supplier.SupplierType.ERSAdvanced:
+				break;
+		}
+		return quality;
+	}
+
 	private readonly float mPriceMultiplier = 100000f;
 
 	public Supplier.SupplierType supplierType = Supplier.SupplierType.Brakes;
@@ -175,6 +205,7 @@ public class Supplier
 	public float    chassiDevelopmentTestDriverBonus;
 	public float    chassiDevelopmentInvestedMoney;
 	public DateTime chassiDevelopmentLastUpdate;
+	public bool     chassiIsAvailable = true;
 
 	public int teamID;
 

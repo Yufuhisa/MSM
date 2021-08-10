@@ -127,7 +127,7 @@ public class SupplierManager : InstanceCounter
 	}
 
 	// initialize chassi development for next season
-	// Team.championship.OnSeasonStart() <- Bei Spielstart und PreSeasonEnd aufgerufen
+	// Team.championship.OnSeasonStart() <- call on game start and PreSeasonEnd
 	public void InitializeChasiDevelopment(Team inTeam) {
 		// get Team chassi supplier
 		global::Debug.LogErrorFormat("Initilize Chassi Supplier for Team {0}, ID {1}", new object[] { inTeam.GetShortName(false), inTeam.teamID });
@@ -144,7 +144,7 @@ public class SupplierManager : InstanceCounter
 	}
 
 	// update mid season chassi development
-	// Team.Update()
+	// called by Team.Update()
 	public void UpdateChassiContribution(Team inTeam) {
 		DateTime now = Game.instance.time.now;
 		DateTime seasonStart = inTeam.championship.calendar[0].eventDate.AddDays(-11.0);
@@ -152,7 +152,7 @@ public class SupplierManager : InstanceCounter
 
 		// if not in season -> do nothing
 		if (now < seasonStart || now > seasonEnd) {
-			global::Debug.LogErrorFormat("UpdateChassiContribution, not in Season, date: {0}, SeasonStart: {1}, SeasonEnd {2} ", new object[] { now, seasonStart, seasonEnd });
+			//global::Debug.LogErrorFormat("UpdateChassiContribution, not in Season, date: {0}, SeasonStart: {1}, SeasonEnd {2} ", new object[] { now, seasonStart, seasonEnd });
 			return;
 		}
 
@@ -207,20 +207,34 @@ public class SupplierManager : InstanceCounter
 		inPoints = inPoints - tyreWear - tyreHeating;
 
 		// randomly assing remaining points for first attribute
-		float pointsForFirst = Convert.ToSingle(Math.Min(tyreWear + RandomUtility.GetRandom(0f,inPoints), 10f)) - tyreWear;
-		tyreWear += pointsForFirst;
+		float addPointsForWear = RandomUtility.GetRandom(0f,inPoints);
+		float addPointsForHeating = inPoints - addPointsForWear;
+
+		// cap tyreWear to 10 points
+		if (tyreWear + addPointsForWear > 10f) {
+			addPointsForHeating += (tyreWear + addPointsForWear) - 10f;
+			addPointsForWear = 10f - tyreWear;
+		}
+
+		// cap tyreHeating to 10 points
+		if (tyreHeating + addPointsForHeating > 10f) {
+			addPointsForWear += (tyreHeating + addPointsForHeating) - 10f;
+			addPointsForHeating = 10f - tyreHeating;
+		}
 
 		// assing remaining points for second attribute
-		tyreHeating += inPoints - pointsForFirst;
+		tyreWear += addPointsForWear;
+		tyreHeating += addPointsForHeating;
 
+		// update chassi suppliert values
 		inSupplier.supplierStats.Remove(CarChassisStats.Stats.TyreWear);
 		inSupplier.supplierStats.Remove(CarChassisStats.Stats.TyreHeating);
-
 		inSupplier.supplierStats.Add(CarChassisStats.Stats.TyreWear, tyreWear);
 		inSupplier.supplierStats.Add(CarChassisStats.Stats.TyreHeating, tyreHeating);
 	}
 
-	public void UpdateDefaultChassisOnSeasonEnd() {
+	// calculate points for default chassi for next season
+	private void UpdateDefaultChassisOnSeasonEnd() {
 		List<Supplier> defaultChassiSupplier = new List<Supplier>();
 
 		defaultChassiSupplier.Add(this.GetSupplierByID(319)); // Lola
@@ -244,22 +258,53 @@ public class SupplierManager : InstanceCounter
 		this.distributePointsToChassiSupplier(bottom, 3f);
 	}
 
+	// calculate team chassis
+	// called by Championship.OnSeasonEnd()
+	public void UpdateTeamChassi(ChampionshipStandings teamStandings) {
+		// create default chassis for next season
+		Game.instance.supplierManager.UpdateDefaultChassisOnSeasonEnd();
+
+		// calculate team chassis
+		List<Team> list = teamStandings.GetTeamList();
+		foreach(Team team in list) {
+			Game.instance.supplierManager.UpdateChassiContributionOnSeasonEnd(team);
+		}
+
+		// check if/which AI has no team chassi -> has to select default chassi
+		if (RandomUtility.GetRandom01() <= SupplierManager.AI_NO_TEAMCHASSI_CHANCE) {
+			global::Debug.LogErrorFormat("Disable a Team Chassi");
+			Team teamWithNowOwnChassi;
+			if (RandomUtility.GetRandom01() > 0.5f)
+				teamWithNowOwnChassi = teamStandings.GetTeamList()[teamStandings.GetTeamList().Count - 1];
+			else
+				teamWithNowOwnChassi = teamStandings.GetTeamList()[teamStandings.GetTeamList().Count - 2];
+			if (teamWithNowOwnChassi != null && !teamWithNowOwnChassi.IsPlayersTeam()) {
+				global::Debug.LogErrorFormat("Disable Team Chassi for Team {0}", new object[] { teamWithNowOwnChassi.GetShortName(false) });
+				this.getChassiSupplierForTeam(teamWithNowOwnChassi).chassiIsAvailable = false;
+			}
+		}
+	}
+
 	// Update invested money for car development
-	// get from inTeam.financeController.moneyForCarDev
-	public void UpdateChassiContributionOnSeasonEnd(Team inTeam) {
+	private void UpdateChassiContributionOnSeasonEnd(Team inTeam) {
 		// get Team chassi supplier
-		Supplier chassiSupplier = getChassiSupplierForTeam(inTeam);
+		Supplier chassiSupplier = this.getChassiSupplierForTeam(inTeam);
 		if (chassiSupplier == null) {
 			global::Debug.LogErrorFormat("No ChassiSupplier for Team {0} found", new object[] { inTeam.GetShortName(false) });
 			return;
 		}
 
+		// mark team chassi initially as available
+		chassiSupplier.chassiIsAvailable = true;
+
 		// calculate chassi points from investment (everything above 10Mio, up to 10Mio total = 20 Points)
 		float investment = (float)inTeam.financeController.moneyForCarDev;
 		chassiSupplier.chassiDevelopmentInvestedMoney = (investment - 10000000f) / 10000000f * 20f;
 
+		// cost for team chassi is always 2 Mio (materials and production)
 		chassiSupplier.price = 2000000;
 
+		// calculate total points for team chassi
 		float teamChassiPoints = 0f;
 		teamChassiPoints += chassiSupplier.chassiDevelopmentEngineerBonus * 0.5f;
 		teamChassiPoints += chassiSupplier.chassiDevelopmentTestDriverBonus * 0.15f;
@@ -267,23 +312,20 @@ public class SupplierManager : InstanceCounter
 
 		this.distributePointsToChassiSupplier(chassiSupplier, teamChassiPoints);
 
-		// Low -> keine Entwicklung
-		// Medion -> ???
-		// High -> ???
-		
-		// TeamFinanceController.NextYearCarInvestement =
-		// 10.000.000 - 15.000.000 - 20.000.000
+		if (inTeam.IsPlayersTeam()) {
+			// Player Team needs at least 12.000.000 Investment for Team Chassi to be available
+			if (inTeam.financeController.moneyForCarDev < 12000000L)
+				chassiSupplier.chassiIsAvailable = false;
+			// For Player everything above 10 Mio is used up for development (yes, player only, AI gets everything)
+			inTeam.financeController.moneyForCarDev = 10000000L;
+		}
 
-		// 4 Mio für billig Chassi
-		// Random: 3 5 8 Punkte
-
-		// 6 Mio für selbst entwickelt
-
-		// 2 Mio für Matialkosten
-		// 35% Investition + 15% Testfahrer (weniger) + 50% Engineer
-		// Maximal 20 Punkte (10 + 10)
-		// 25% auf beide, 50% random
-		// Minimum 1 + 1
+		global::Debug.LogErrorFormat("Chassi Contribution, for Team {0}, eng {1}, td {2}, im {3}", new object[] {
+			inTeam.GetShortName(false),
+			chassiSupplier.chassiDevelopmentEngineerBonus.ToString("00.0"),
+			chassiSupplier.chassiDevelopmentTestDriverBonus.ToString("00.0"),
+			chassiSupplier.chassiDevelopmentInvestedMoney.ToString("00.0")
+		});
 	}
 
 	public List<Supplier> GetSupplierList(Supplier.SupplierType inType)
@@ -443,6 +485,9 @@ public class SupplierManager : InstanceCounter
 			// check if team is allowed to buy from this supplier
 			if (checkCanBuy && !list[i].CanTeamBuyThis(inTeam))
 				flag = false;
+			// for chassi, filter non availble team chassi for AI (player should at least see it, even if not available to select)
+			if (!inTeam.IsPlayersTeam() && !list[i].chassiIsAvailable)
+				flag = false;
 			// for engines in tier 1 check if team rang ist high enough for this supplier
 			int teamLastRank = 12;
 			if (inTeam.history.HasPreviousSeasonHistory()) {
@@ -500,6 +545,8 @@ public class SupplierManager : InstanceCounter
 			}
 		}
 	}
+
+	private static readonly float AI_NO_TEAMCHASSI_CHANCE = 0.5f;
 
 	private List<Supplier> engineSuppliers = new List<Supplier>();
 

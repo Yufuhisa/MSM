@@ -357,20 +357,13 @@ public class Championship : Entity
 		}
 	}
 
-	private void UpdateTeamChassi() {
-		// Team chassis only exist for F1 Teams
-		if (this.championshipID == 0) {
-			Game.instance.supplierManager.UpdateDefaultChassisOnSeasonEnd();
-			List<Team> list = this.standings.GetTeamList();
-			foreach(Team team in list) {
-				Game.instance.supplierManager.UpdateChassiContributionOnSeasonEnd(team);
-			}
-		}
-	}
-
 	public void OnSeasonEnd()
 	{
-		this.UpdateTeamChassi();
+		// Update Chassi for F1 Teams
+		if (this.championshipID == 0) {
+			Game.instance.supplierManager.UpdateTeamChassi(this.standings);
+		}
+
 		this.standings.UpdateStandings();
 		this.standingsHistory.AddEntry();
 		this.HandoutPrizeMoney();

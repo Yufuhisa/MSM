@@ -35,16 +35,16 @@ public class UISupplierOption : MonoBehaviour
 		Team team = Game.instance.player.team;
 		this.cost.text = GameUtility.GetCurrencyString((long)this.mSupplier.GetPrice(team), 0);
 		GameUtility.SetActive(this.discountDetails, this.showDetails());
-		if (this.mSupplier.CanTeamBuyThis(team))
-		{
-			this.canvasGroup.alpha = 1f;
-			this.canvasGroup.interactable = true;
-		}
-		else
-		{
+
+		this.canvasGroup.alpha = 1f;
+		this.canvasGroup.interactable = true;
+
+		// if option is not available for player, deactivate and grey out
+		if (!this.mSupplier.CanTeamBuyThis(team) || !this.mSupplier.chassiIsAvailable) {
 			this.canvasGroup.alpha = 0.2f;
 			this.canvasGroup.interactable = false;
 		}
+
 		if (this.mSupplier.supplierType == Supplier.SupplierType.Fuel)
 		{
 			GameUtility.SetActive(this.statParentObjects[2], false);
@@ -172,11 +172,13 @@ public class UISupplierOption : MonoBehaviour
 		if (this.mSupplier.supplierType == Supplier.SupplierType.Engine) {
 			header = "Engine Details";
 			description += "<color=yellow>Engine-Type: " + this.mSupplier.model + "</color>";
-		} else if (this.mSupplier.supplierType == Supplier.SupplierType.Materials) {
+		} else if (this.mSupplier.supplierType == Supplier.SupplierType.Materials && this.mSupplier.chassiDevelopmentEngineerBonus >= 0.001f) {
 			header = "Chassi Details";
 			description += "Engineer Bonus: " + this.mSupplier.chassiDevelopmentEngineerBonus;
 			description += "\nDriver Bonus: " + this.mSupplier.chassiDevelopmentTestDriverBonus;
 			description += "\nInvested Bonus: " + this.mSupplier.chassiDevelopmentInvestedMoney;
+			if (!this.mSupplier.chassiIsAvailable)
+				description += "\n<color=red>Development not finished, you need to invest at least 2 Mio above minimum in next year car</color>";
 		}
 
 		// add discount
