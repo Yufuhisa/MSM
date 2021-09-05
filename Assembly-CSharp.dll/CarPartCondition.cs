@@ -192,7 +192,7 @@ public class CarPartCondition
 	{
 		// fault chance relative to reliablity
 		float baseFaultChance = 0.05f;
-		float[] faultChanceEach5Percent = new float[] {0.00f, 0.07f, 0.06f, 0.05f, 0.04f, 0.05f, 0.06f, 0.07f};
+		float[] faultChanceEach5Percent = new float[] {0.00f, 0.08f, 0.07f, 0.06f, 0.05f, 0.06f, 0.07f, 0.08f};
 
 		float faultChance = baseFaultChance;
 		float compareReliability = 1f;
