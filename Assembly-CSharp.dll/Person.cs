@@ -822,7 +822,6 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 
 	public float GetImprovementRateForAge(DateTime inDate, DateTime inPeakAge, int inPeakDuration, float inImprovementRate)
 	{
-		int num = inDate.Year - inPeakAge.Year;
 		int num2 = 365;
 		if (DateTime.IsLeapYear(inDate.Year))
 		{
@@ -831,11 +830,11 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		TimeSpan timeSpan = inPeakAge - inDate;
 		if (inDate >= inPeakAge)
 		{
-			if (num <= inPeakDuration)
-			{
+			DateTime startDecayDate = inPeakAge.AddYears(inPeakDuration);
+			double daysDecaying = (inDate - startDecayDate).TotalDays;
+			if (daysDecaying <= 0)
 				return 0f;
-			}
-			return (float)((inDate - inPeakAge).TotalDays * (double)this.mImprovementRateDecay);
+			return (float)(daysDecaying * (double)this.mImprovementRateDecay);
 		}
 		else
 		{
