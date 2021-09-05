@@ -1273,41 +1273,54 @@ public class Team : Entity
 		List<Driver> allPeopleOnJob = this.contractManager.GetAllPeopleOnJob<Driver>(Contract.Job.Driver);
 		foreach (Driver driver in allPeopleOnJob)
 		{
-			if (driver.WantsToRetire(now, driver.GetImprovementRate()))
-			{
-				this.HandleDriverRetirementRequest(driver);
-			}
+			if (driver == null)
+				global::Debug.LogErrorFormat("HandleRetirements for Team {0}: Driver is missing", new object[] { this.GetShortName(false) });
+			else
+				if (driver.WantsToRetire(now, driver.GetImprovementRate()))
+					this.HandleDriverRetirementRequest(driver);
 		}
 		Engineer personOnJob = this.contractManager.GetPersonOnJob<Engineer>(Contract.Job.EngineerLead);
-		if (personOnJob.WantsToRetire(now, personOnJob.improvementRate))
-		{
-			this.HandleEngineerRetirementRequest(personOnJob);
+		if (personOnJob == null)
+			global::Debug.LogErrorFormat("HandleRetirements for Team {0}: EngineerLead is missing", new object[] { this.GetShortName(false) });
+		else {
+			if (personOnJob.WantsToRetire(now, personOnJob.improvementRate))
+				this.HandleEngineerRetirementRequest(personOnJob);
 		}
 		List<Mechanic> allPeopleOnJob2 = this.contractManager.GetAllPeopleOnJob<Mechanic>(Contract.Job.Mechanic);
 		foreach (Mechanic mechanic in allPeopleOnJob2)
 		{
-			if (mechanic.WantsToRetire(now, mechanic.improvementRate))
-			{
-				this.HandleMechanicRetirementRequest(mechanic);
+			if (mechanic == null)
+				global::Debug.LogErrorFormat("HandleRetirements for Team {0}: Mechanic is missing", new object[] { this.GetShortName(false) });
+			else {
+				if (mechanic.WantsToRetire(now, mechanic.improvementRate))
+					this.HandleMechanicRetirementRequest(mechanic);
 			}
 		}
-		if (this.chairman.WantsToRetire(now, 0f))
-		{
-			this.HandleChairmanRetirementRequest(this.chairman);
+		if (this.chairman == null)
+			global::Debug.LogErrorFormat("HandleRetirements for Team {0}: Chairman is missing", new object[] { this.GetShortName(false) });
+		else {
+			if (this.chairman.WantsToRetire(now, 0f))
+				this.HandleChairmanRetirementRequest(this.chairman);
 		}
 		Scout personOnJob2 = this.contractManager.GetPersonOnJob<Scout>(Contract.Job.Scout);
-		if (personOnJob2.WantsToRetire(now, 0f))
-		{
-			this.HandleScoutRetirementRequest(personOnJob2);
+		if (personOnJob2 == null)
+			global::Debug.LogErrorFormat("HandleRetirements for Team {0}: Scout is missing", new object[] { this.GetShortName(false) });
+		else {
+			if (personOnJob2.WantsToRetire(now, 0f))
+				this.HandleScoutRetirementRequest(personOnJob2);
 		}
 		Assistant personOnJob3 = this.contractManager.GetPersonOnJob<Assistant>(Contract.Job.TeamAssistant);
-		if (personOnJob3.WantsToRetire(now, 0f))
-		{
-			this.HandleTeamAssistantRetirementRequest(personOnJob3);
+		if (personOnJob3 == null)
+			global::Debug.LogErrorFormat("HandleRetirements for Team {0}: TeamAssistant is missing", new object[] { this.GetShortName(false) });
+		else {
+			if (personOnJob3.WantsToRetire(now, 0f))
+				this.HandleTeamAssistantRetirementRequest(personOnJob3);
 		}
-		if (!this.IsPlayersTeam() && this.teamPrincipal.WantsToRetire(now, 0f))
-		{
-			this.HandleTeamPrincipalRetirementRequest(this.teamPrincipal);
+		if (this.teamPrincipal == null)
+			global::Debug.LogErrorFormat("HandleRetirements for Team {0}: TeamPrincipal is missing", new object[] { this.GetShortName(false) });
+		else {
+			if (!this.IsPlayersTeam() && this.teamPrincipal.WantsToRetire(now, 0f))
+				this.HandleTeamPrincipalRetirementRequest(this.teamPrincipal);
 		}
 	}
 
@@ -1538,7 +1551,7 @@ public class Team : Entity
 			}
 			return text;
 		}
-		return inActiveDriver.lastName;
+		return inActiveDriver.shortName;
 	}
 
 	public string GetCarName(Driver[] inDrivers, params Driver[] inActiveDriver)
