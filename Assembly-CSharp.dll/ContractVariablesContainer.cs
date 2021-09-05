@@ -66,12 +66,12 @@ public class ContractVariablesContainer
 		{
 			this.driverContractVariablesData[i] = new ContractVariablesData();
 		}
-		this.mDriverWageRangesCurve.Add(0, 0.1f);
-		this.mDriverWageRangesCurve.Add(1, 0.5f);
-		this.mDriverWageRangesCurve.Add(2, 1f);
-		this.mDriverWageRangesCurve.Add(3, 5f);
-		this.mDriverWageRangesCurve.Add(4, 10f);
-		this.mDriverWageRangesCurve.Add(5, 20f);
+		this.mDriverWageRangesCurve.Add(0, 3.6f);
+		this.mDriverWageRangesCurve.Add(1, 4.0f);
+		this.mDriverWageRangesCurve.Add(2, 4.5f);
+		this.mDriverWageRangesCurve.Add(3, 8.5f);
+		this.mDriverWageRangesCurve.Add(4, 13.5f);
+		this.mDriverWageRangesCurve.Add(5, 23.5f);
 		this.mDriverWageRangesCurve.Add(6, 40f);
 		float[] inRanges = new float[]
 		{
@@ -222,12 +222,12 @@ public class ContractVariablesContainer
 		{
 			this.engineerContractVariablesData[i] = new ContractVariablesData();
 		}
-		this.mEngineerWageRangesCurve.Add(0, 0.05f);
-		this.mEngineerWageRangesCurve.Add(1, 0.1f);
-		this.mEngineerWageRangesCurve.Add(2, 0.5f);
-		this.mEngineerWageRangesCurve.Add(3, 1f);
-		this.mEngineerWageRangesCurve.Add(4, 5f);
-		this.mEngineerWageRangesCurve.Add(5, 7.5f);
+		this.mEngineerWageRangesCurve.Add(0, 1.05f);
+		this.mEngineerWageRangesCurve.Add(1, 1.1f);
+		this.mEngineerWageRangesCurve.Add(2, 1.5f);
+		this.mEngineerWageRangesCurve.Add(3, 2f);
+		this.mEngineerWageRangesCurve.Add(4, 6f);
+		this.mEngineerWageRangesCurve.Add(5, 8.5f);
 		this.mEngineerWageRangesCurve.Add(6, 10f);
 		float[] inRanges = new float[]
 		{
