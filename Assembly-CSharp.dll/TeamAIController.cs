@@ -1320,6 +1320,7 @@ public class TeamAIController
 	private Driver FindReplacementDriver(Driver current_driver, bool has_to_be_better, float better_delta = 0f)
 	{
 		long num = (long)((float)this.mTeam.financeController.finance.currentBudget * this.mTeam.aiWeightings.mFinanceDrivers);
+		Championship teamChampionship = this.mTeam.GetChampionshipEntry().championship;
 		HQsBuilding_v1 building = this.mTeam.headquarters.GetBuilding(HQsBuildingInfo.Type.ScoutingFacility);
 		int num2 = 0;
 		if (building != null && building.isBuilt)
@@ -1331,11 +1332,14 @@ public class TeamAIController
 		for (int i = 0; i < entityList.Count; i++)
 		{
 			Driver driver = entityList[i];
-			if (this.IsScoutable(driver) && !driver.Equals(current_driver) && this.PersonNotAlreadyApproached(driver))
-			{
+			if (this.IsScoutable(driver) && !driver.Equals(current_driver) && this.PersonNotAlreadyApproached(driver)
+				&& driver.HasPreferedSeries(teamChampionship.series, true)
+				&& !driver.HasPassedPeakAge()
+				&& (teamChampionship.championshipID > 0 || driver.HasSuperLizens())
+			) {
 				if (!driver.IsFreeAgent() || !this.mTeam.championship.InPreseason() || Game.instance.time.now.Month >= 6 || driver.careerHistory.previousTeam == null || !driver.careerHistory.previousTeam.Equals(this.mTeam))
 				{
-					if ((driver.GetDriverStats().scoutingLevelRequired == 0 || num2 > driver.GetDriverStats().scoutingLevelRequired) && driver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk && (driver.IsFreeAgent() || num > (long)driver.contract.GetContractTerminationCost()))
+					if ((num2 >= driver.GetDriverStats().scoutingLevelRequired) && driver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk && (driver.IsFreeAgent() || num > (long)driver.contract.GetContractTerminationCost()))
 					{
 						this.mScoutableDrivers.Add(driver);
 					}
