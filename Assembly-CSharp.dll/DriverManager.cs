@@ -123,6 +123,7 @@ public class DriverManager : PersonManager<Driver>
 					allEmployeeSlotsForJob[0].personHired = inDriver;
 					flag = true;
 				}
+				inDriver.mCarID = 0;
 			}
 			else if (stringValue == "Two")
 			{
@@ -133,6 +134,7 @@ public class DriverManager : PersonManager<Driver>
 					allEmployeeSlotsForJob[1].personHired = inDriver;
 					flag = true;
 				}
+				inDriver.mCarID = 1;
 			}
 			else if (stringValue == "Reserve")
 			{
@@ -141,6 +143,15 @@ public class DriverManager : PersonManager<Driver>
 				if (allEmployeeSlotsForJob[2].personHired == null)
 				{
 					allEmployeeSlotsForJob[2].personHired = inDriver;
+					flag = true;
+				}
+				inDriver.mCarID = -1;
+			}
+			// Set Driver Slot depending on carID
+			if (!flag && inDriver.mCarID >= 0 && inDriver.mCarID <= 1) {
+				if (allEmployeeSlotsForJob[inDriver.mCarID].IsAvailable())
+				{
+					allEmployeeSlotsForJob[inDriver.mCarID].personHired = inDriver;
 					flag = true;
 				}
 			}
@@ -152,6 +163,10 @@ public class DriverManager : PersonManager<Driver>
 					if (employeeSlot.IsAvailable())
 					{
 						employeeSlot.personHired = inDriver;
+						if (i >= 1)
+							inDriver.mCarID = -1;
+						else
+							inDriver.mCarID = i;
 						break;
 					}
 				}

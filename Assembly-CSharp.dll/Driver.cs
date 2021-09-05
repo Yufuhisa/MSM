@@ -1323,7 +1323,7 @@ public class Driver : Person
 
 	private DateTime mLastMoraleBonusDate = default(DateTime);
 
-	private int mCarID = -1;
+	public int mCarID = -1;
 
 	[NonSerialized]
 	private DriverStats mStatsForAITeamEval = new DriverStats();
