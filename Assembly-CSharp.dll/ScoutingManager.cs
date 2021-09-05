@@ -411,7 +411,7 @@ public class ScoutingManager : InstanceCounter
 		}
 	}
 
-	private readonly int mBaseScoutingSlotsCount = 3;
+	private readonly int mBaseScoutingSlotsCount = 2;
 
 	private int mUnlockedScoutingSlots;
 
