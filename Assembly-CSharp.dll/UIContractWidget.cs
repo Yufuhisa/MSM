@@ -24,7 +24,8 @@ public class UIContractWidget : MonoBehaviour
 		this.negotiateLabel.text = ((!this.mDriver.isNegotiatingContract) ? ((!this.mDriver.IsPlayersDriver()) ? Localisation.LocaliseID("PSG_10007753", null) : Localisation.LocaliseID("PSG_10006855", null)) : Localisation.LocaliseID("PSG_10010603", null));
 		bool flag = App.instance.gameStateManager.currentState.group != GameState.Group.Frontend;
 		bool flag2 = !Game.instance.player.IsUnemployed();
-		this.negotiateButton.interactable = (!flag && !this.mDriver.isNegotiatingContract);
+		bool canBeScoutedByPlayer = this.mDriver.IsPlayersDriver() || this.mDriver.HasSuperLizens();
+		this.negotiateButton.interactable = (!flag && !this.mDriver.isNegotiatingContract && canBeScoutedByPlayer);
 		this.compareButton.interactable = !flag;
 		this.fireButton.interactable = !flag;
 		GameUtility.SetActive(this.negotiateButton.gameObject, flag2 && (this.mDriver.canNegotiateContract || this.mDriver.isNegotiatingContract));

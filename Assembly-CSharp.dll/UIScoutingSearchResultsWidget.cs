@@ -128,24 +128,27 @@ public class UIScoutingSearchResultsWidget : MonoBehaviour
 			Person person = inList[i];
 			if (this.ApplyFilterPerson(person))
 			{
-				if (this.ApplyFilterSeries(person))
+				if (this.ApplyFilterSuperLizens(person))
 				{
-					if (this.ApplyFilterPlayerTeam(person))
+					if (this.ApplyFilterSeries(person))
 					{
-						if (this.ApplyFilterScoutingLevel(person))
+						if (this.ApplyFilterPlayerTeam(person))
 						{
-							if (this.ApplyFilterChallengeReward(person))
+							if (this.ApplyFilterScoutingLevel(person))
 							{
-								if (this.ApplyFilterAge(person))
+								if (this.ApplyFilterChallengeReward(person))
 								{
-									if (this.ApplyFilterAbility(person))
+									if (this.ApplyFilterAge(person))
 									{
-										if (this.ApplyChampionshipFilter(person))
+										if (this.ApplyFilterAbility(person))
 										{
-											this.AddPersonNotifications(person);
-											if (this.ApplyFilterView(person))
+											if (this.ApplyChampionshipFilter(person))
 											{
-												this.mList.Add(person);
+												this.AddPersonNotifications(person);
+												if (this.ApplyFilterView(person))
+												{
+													this.mList.Add(person);
+												}
 											}
 										}
 									}
@@ -180,20 +183,34 @@ public class UIScoutingSearchResultsWidget : MonoBehaviour
 		return !inPerson.IsReplacementPerson() && !inPerson.HasRetired();
 	}
 
+	private bool ApplyFilterSuperLizens(Person inPerson)
+	{
+		// not relevant for non drivers
+		if (!(inPerson is Driver))
+			return true;
+		Driver driver = inPerson as Driver;
+		return driver.HasSuperLizens();
+	}
+
 	private bool ApplyFilterSeries(Person inPerson)
 	{
+		if (!(inPerson is Driver))
+			return true;
+
 		Driver driver = inPerson as Driver;
-		if (driver != null && !driver.joinsAnySeries)
+
+		if (driver.joinsAnySeries)
+			return true;
+
+		for (int i = 0; i < this.filterDriveableSeries.Length; i++)
 		{
-			for (int i = 0; i < this.filterDriveableSeries.Length; i++)
+			if (driver.HasPreferedSeries(this.filterDriveableSeries[i], true))
 			{
-				if (!driver.HasPreferedSeries(this.filterDriveableSeries[i], true))
-				{
-					return false;
-				}
+				return true;
 			}
 		}
-		return true;
+
+		return false;
 	}
 
 	private bool ApplyFilterPlayerTeam(Person inPerson)
@@ -214,7 +231,8 @@ public class UIScoutingSearchResultsWidget : MonoBehaviour
 			return true;
 		}
 		HQsBuilding_v1 building = Game.instance.player.team.headquarters.GetBuilding(HQsBuildingInfo.Type.ScoutingFacility);
-		return building != null && building.isBuilt && building.currentLevel >= scoutingLevelRequired;
+		// building.currentLevel starts with 0 for actual building lvl 1, and so on
+		return building != null && building.isBuilt && building.currentLevel >= scoutingLevelRequired - 1;
 	}
 
 	private bool ApplyFilterChallengeReward(Person inPerson)
@@ -255,7 +273,7 @@ public class UIScoutingSearchResultsWidget : MonoBehaviour
 		case UIScoutingFilterAge.Filter.Older:
 			return num >= 34;
 		default:
-			return true;
+			return num >= 16;
 		}
 	}
 
