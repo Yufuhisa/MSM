@@ -354,6 +354,8 @@ public class ApproachDialogBox : UIDialogBox
 			return Localisation.LocaliseID("PSG_10012169", null);
 		case Person.InterestedToTalkResponseType.InvestorDriverAgeTooHigh:
 			return Localisation.LocaliseID("PSG_10012273", null);
+		case Person.InterestedToTalkResponseType.TeamRangToLow:
+			return Localisation.LocaliseID("PSG_11000000", null);
 		}
 		return Localisation.LocaliseID("PSG_10009263", null);
 	}

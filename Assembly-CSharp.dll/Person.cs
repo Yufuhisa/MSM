@@ -442,6 +442,7 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		int num = this.contractManager.contractEvaluation.desiredContractValues.CalculateDesiredChampionship(inTeam);
 		Driver driver = this as Driver;
 		bool flag2 = inTeam.IsPlayersTeam() && Game.instance.player.playerBackStoryType == PlayerBackStory.PlayerBackStoryType.MotorsportLegend;
+		int championshipOrder = inTeam.championship.championshipOrder;
 		if (this.HasRetired())
 		{
 			return Person.InterestedToTalkResponseType.WantsToRetire;
@@ -468,6 +469,14 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 			{
 				return Person.InterestedToTalkResponseType.OffendedByInterview;
 			}
+			if (championshipOrder == 0 && MathsUtility.RoundToScale(driver.GetStats().GetAbility(), 4f) >= 4.25f) {
+				int teamLastRank = 12;
+				if (inTeam.history.HasPreviousSeasonHistory()) {
+					teamLastRank = inTeam.history.previousSeasonTeamResult;
+				}
+				if (teamLastRank >= 6)
+					return Person.InterestedToTalkResponseType.TeamRangToLow;
+			}
 		}
 		if (flag2)
 		{
@@ -485,7 +494,6 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		{
 			return Person.InterestedToTalkResponseType.WantsToRetire;
 		}
-		int championshipOrder = inTeam.championship.championshipOrder;
 		if (!this.IsFreeAgent())
 		{
 			int championshipOrder2 = this.contract.GetTeam().championship.championshipOrder;
@@ -1140,6 +1148,7 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		NotInterestedToTalkGeneric,
 		WontDriveForThatSeries,
 		OffendedByInterview,
-		InvestorDriverAgeTooHigh
+		InvestorDriverAgeTooHigh,
+		TeamRangToLow
 	}
 }
