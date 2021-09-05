@@ -260,6 +260,13 @@ public class PersonalityTraitController_v2
 			list.Sort((PersonalityTraitData X, PersonalityTraitData Y) => X.probability.CompareTo(Y.probability));
 			this.PickRandomTraitFromList(list);
 		}
+		// check if valiable for superlizens
+		int idSuperLizens = 500;
+		if (mDriver.GetAge() >= 18 && mDriver.careerHistory.GetTotalCareerRaces() >= 20 && !this.HasTrait(false, new int[] {idSuperLizens})) {
+			PersonalityTraitData superLizensTraitData;
+			if (Game.instance.personalityTraitManager.personalityTraits.TryGetValue(idSuperLizens, out superLizensTraitData))
+				this.AddPersonalityTrait(superLizensTraitData, false);
+		}
 	}
 
 	private void UpdateTemporaryTraits()

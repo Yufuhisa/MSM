@@ -1241,6 +1241,11 @@ public class Driver : Person
 		});
 	}
 
+	public bool HasSuperLizens() {
+		int idSuperLizens = 500;
+		return this.personalityTraitController.HasTrait(false, new int[] {idSuperLizens});
+	}
+
 	public DriverCareerForm careerForm = new DriverCareerForm();
 
 	public DriverMentalState mentalState = new DriverMentalState();
