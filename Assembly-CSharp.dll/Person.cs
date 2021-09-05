@@ -53,11 +53,11 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		{
 			this.mLastName = GameUtility.ChangeFirstCharToUpperCase(inLastName);
 		}
-		this.mShortName = ((this.mFirstName.Length <= 0) ? "." : (this.firstName.Substring(1,1) + ". " + this.lastName));
+		this.mShortName = ((this.mFirstName.Length <= 0) ? "." : (this.firstName.Substring(0,1) + ". " + this.lastName));
 		if (this.lastName.Length >= 3) {
-			this.mThreeLetterName = this.lastName.Substring(1,3);
+			this.mThreeLetterName = this.lastName.Substring(0,3);
 		} else {
-			this.mThreeLetterName = this.lastName.Substring(1,this.lastName.Length);
+			this.mThreeLetterName = this.lastName.Substring(0,this.lastName.Length);
 		}
 		this.name = inFirstName + " " + inLastName;
 	}
