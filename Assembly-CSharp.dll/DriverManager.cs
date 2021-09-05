@@ -205,6 +205,31 @@ public class DriverManager : PersonManager<Driver>
 
 	public void SetHistoryData(Driver inDriver, DatabaseEntry inData)
 	{
+		// No hist Entry when no races
+		if (inData.GetIntValue("Races") == 0)
+			return;
+
+		int histYear = Game.instance.time.now.Year - 1;
+		Team histTeam = Game.instance.teamManager.GetEntity(34);
+
+		CareerHistoryEntry careerHistoryEntry = new CareerHistoryEntry(new DateTime(histYear, 1, 1))
+		{
+			team = histTeam,
+			championship = histTeam.championship,
+			year = histYear,
+			wins = inData.GetIntValue("Wins"),
+			podiums = inData.GetIntValue("Podiums"),
+			races = inData.GetIntValue("Races"),
+			poles = inData.GetIntValue("Poles"),
+			DNFs = inData.GetIntValue("DNFs"),
+			DNFsViaError = inData.GetIntValue("DNFs via error"),
+			DNS = inData.GetIntValue("DNS"),
+			careerPoints = inData.GetIntValue("Career Points"),
+			championships = inData.GetIntValue("Championships")
+		};
+		careerHistoryEntry.MarkEntryAsFinished(new DateTime(histYear, 12, 31));
+
+		inDriver.careerHistory.AddHistory(careerHistoryEntry);
 	}
 
 	public void SetStatsData(Driver inDriver, DatabaseEntry inData)

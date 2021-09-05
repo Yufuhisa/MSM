@@ -585,8 +585,7 @@ public class Championship : Entity
 
 	public void GenerateInitialChampionshipHistory()
 	{
-		CareerHistoryGenerator careerHistoryGenerator = new CareerHistoryGenerator(this);
-		careerHistoryGenerator.GenerateHistory();
+		// no randomly generated history
 	}
 
 	public void GenerateNewChampionshipHistory()
