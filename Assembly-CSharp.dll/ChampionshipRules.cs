@@ -88,7 +88,7 @@ public class ChampionshipRules : Entity, fsISerializationCallbacks
 		carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, 0.8f);
 		carPart.stats.partCondition.SetCondition(0.8f);
 		carPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		carPart.stats.maxReliability = 1f;
+		carPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
 		carPart.stats.maxPerformance = 0f;
 		carPart.buildDate = Game.instance.time.now;
 		carPart.stats.level = 0;
@@ -140,7 +140,7 @@ public class ChampionshipRules : Entity, fsISerializationCallbacks
 		carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, 0.8f);
 		carPart.stats.partCondition.SetCondition(0.8f);
 		carPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		carPart.stats.maxReliability = 1f;
+		carPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
 		carPart.stats.maxPerformance = 0f;
 		carPart.buildDate = Game.instance.time.now;
 		carPart.stats.level = -1;

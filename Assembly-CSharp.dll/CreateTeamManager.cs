@@ -395,7 +395,7 @@ public class CreateTeamManager
 					carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, RandomUtility.GetRandom(teamDefaultsForChampionship.defaultPartReliabilityMin, teamDefaultsForChampionship.defaultPartReliabilityMax));
 					carPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
 					carPart.stats.maxPerformance = (float)RandomUtility.GetRandomInc(teamDefaultsForChampionship.defaultPartMaxPerformanceMin, teamDefaultsForChampionship.defaultPartMaxPerformanceMax);
-					carPart.stats.maxReliability = GameStatsConstants.initialMaxReliabilityValue;
+					carPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
 					carPart.buildDate = Game.instance.time.now.AddDays(-1.0);
 				}
 			}

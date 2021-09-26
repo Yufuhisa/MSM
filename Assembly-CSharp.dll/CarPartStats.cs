@@ -289,19 +289,23 @@ public class CarPartStats
 		}
 	}
 
-	public const int maxLevelMultiplier = 3;
-
-	public const int maxPerformanceConstant = 21;
-
 	public const float weightStrippedReliabilityMin = 0.5f;
 
 	public CarStats.StatType statType = CarStats.StatType.Acceleration;
 
 	public int level;
 
-	public float maxReliability = 0.8f;
+	public float GetMaxReliability() {
+		return Mathf.Clamp(maxReliability, 0f, GameStatsConstants.absolutMaxReliability);
+	}
 
-	public float maxPerformance = 20f;
+	public void SetMaxReliability(float inValue) {
+		maxReliability = Mathf.Clamp(inValue, 0f, GameStatsConstants.absolutMaxReliability);
+	}
+
+	private float maxReliability = GameStatsConstants.initialMaxReliabilityValue;
+
+	public float maxPerformance = GameStatsConstants.baseCarPartPerformance;
 
 	public float rulesRisk;
 
@@ -309,7 +313,7 @@ public class CarPartStats
 
 	private float mPerformance;
 
-	private float mReliability;
+	private float mReliability = GameStatsConstants.initialReliabilityValue;
 
 	private float mStat;
 

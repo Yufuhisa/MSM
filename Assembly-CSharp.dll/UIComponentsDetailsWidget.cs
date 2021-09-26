@@ -129,7 +129,7 @@ public class UIComponentsDetailsWidget : MonoBehaviour
 		this.SetAnimatedFloats(inPart);
 		this.mainStatNameLabel.text = Localisation.LocaliseEnum(inPart.stats.statType);
 		this.reliabilityLabel.text = Mathf.Round(inPart.stats.reliability * 100f) + "%";
-		this.reliabilityMaxLabel.text = "/" + Mathf.Round(inPart.stats.maxReliability * 100f) + "%";
+		this.reliabilityMaxLabel.text = "/" + Mathf.Round(inPart.stats.GetMaxReliability() * 100f) + "%";
 		this.mainStatLabel.text = inPart.stats.statWithPerformance.ToString("0", Localisation.numberFormatter);
 		this.mainStatMaxLabel.text = "/" + (inPart.stats.stat + Mathf.Max(0f, inPart.stats.maxPerformance)).ToString("0", Localisation.numberFormatter);
 		TimeSpan componentsDesignDurationBonus = this.mDesign.GetComponentsDesignDurationBonus();
@@ -196,7 +196,7 @@ public class UIComponentsDetailsWidget : MonoBehaviour
 		this.animatedFloats[3].SetValue(inValue, AnimatedFloat.Animation.Animate, inDelay, inDuration, EasingUtility.Easing.InOutSin);
 		inValue = inPart.stats.partCondition.redZone;
 		this.animatedFloats[4].SetValue(inValue, AnimatedFloat.Animation.Animate, inDelay, inDuration, EasingUtility.Easing.InOutSin);
-		inValue = inPart.stats.maxReliability;
+		inValue = inPart.stats.GetMaxReliability();
 		this.animatedFloats[5].SetValue(inValue, AnimatedFloat.Animation.Animate, inDelay, inDuration, EasingUtility.Easing.InOutSin);
 	}
 

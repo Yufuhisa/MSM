@@ -78,7 +78,7 @@ public class UIPartInfoPopupWidget : UIDialogBox
 		this.performanceLabel.text = inPart.stats.statWithPerformance.ToString("N0", Localisation.numberFormatter);
 		this.maxPerformanceLabel.text = "/ " + (inPart.stats.stat + Mathf.Max(0f, inPart.stats.maxPerformance)).ToString("N0", Localisation.numberFormatter);
 		this.partReliability.text = inPart.stats.partCondition.condition.ToString("P0", Localisation.numberFormatter);
-		this.partMaxReliability.text = "/ " + inPart.stats.maxReliability.ToString("P0", Localisation.numberFormatter);
+		this.partMaxReliability.text = "/ " + inPart.stats.GetMaxReliability().ToString("P0", Localisation.numberFormatter);
 		int days = (Game.instance.time.now - inPart.buildDate).Days;
 		if (days < 7)
 		{

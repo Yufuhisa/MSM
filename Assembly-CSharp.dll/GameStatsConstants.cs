@@ -36,7 +36,11 @@ public static class GameStatsConstants
 
 	public static float initialReliabilityValue = 0.55f;
 
-	public static float initialMaxReliabilityValue = 1f;
+	public static float initialMaxReliabilityValue = 0.74f;
+
+	public static float absolutMaxReliability = 0.98f;
+
+	public static float baseCarPartPerformance = 20f;
 
 	public static float initialRedZone = 0.2f;
 

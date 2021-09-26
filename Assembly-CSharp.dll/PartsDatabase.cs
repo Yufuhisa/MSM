@@ -80,11 +80,11 @@ public class PartsDatabase
 			inValue = inData.GetFloatValue("HSC");
 			break;
 		}
+		carPart.stats.SetMaxReliability(inData.GetFloatValue("Max Reliability") / 100f);
 		carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
 		carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inData.GetFloatValue("Reliability") / 100f);
 		carPart.stats.partCondition.SetCondition(inData.GetFloatValue("Condition") / 100f);
 		carPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		carPart.stats.maxReliability = Mathf.Max(GameStatsConstants.initialMaxReliabilityValue, carPart.stats.partCondition.condition);
 		carPart.stats.maxPerformance = (float)(inData.GetIntValue("Performance Improvability") * 3);
 		carPart.buildDate = Game.instance.time.now.AddDays((double)(-(double)inData.GetIntValue("Age")));
 		carPart.PostStatsSetup(inChampionship);

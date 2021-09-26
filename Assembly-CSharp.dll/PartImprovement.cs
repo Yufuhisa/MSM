@@ -45,7 +45,7 @@ public class PartImprovement
 		{
 			return;
 		}
-		if (inStackType == CarPartStats.CarPartStat.Reliability && inPart.stats.GetStat(inStackType) >= inPart.stats.maxReliability)
+		if (inStackType == CarPartStats.CarPartStat.Reliability && inPart.stats.GetStat(inStackType) >= inPart.stats.GetMaxReliability())
 		{
 			return;
 		}
@@ -418,7 +418,7 @@ public class PartImprovement
 				{
 				case CarPartStats.CarPartStat.Reliability:
 				{
-					float num3 = carPart.stats.maxReliability;
+					float num3 = carPart.stats.GetMaxReliability();
 					float num4 = num3 - carPart.stats.GetStat(targetStat);
 					num4 = Mathf.Clamp01(num4);
 					num2 += num4;
@@ -451,7 +451,7 @@ public class PartImprovement
 				{
 				case CarPartStats.CarPartStat.Reliability:
 				{
-					float num3 = carPart2.stats.maxReliability;
+					float num3 = carPart2.stats.GetMaxReliability();
 					float num5 = num3 - carPart2.stats.GetStat(targetStat);
 					carPart2.stats.AddToStat(targetStat, num5 / num2 * num);
 					if (inFinishWork || Mathf.Approximately(carPart2.stats.GetStat(targetStat), num3))
@@ -560,7 +560,7 @@ public class PartImprovement
 		case CarPartStats.CarPartStat.Reliability:
 			foreach (CarPart carPart in this.partsToImprove[(int)inStat])
 			{
-				float num2 = carPart.stats.maxReliability;
+				float num2 = carPart.stats.GetMaxReliability();
 				float num3 = num2 - carPart.stats.reliability;
 				num += (double)((num3 <= 0f) ? 0f : num3);
 			}
@@ -687,7 +687,7 @@ public class PartImprovement
 				{
 				case CarPartStats.CarPartStat.Reliability:
 				{
-					float num = carPart.stats.maxReliability;
+					float num = carPart.stats.GetMaxReliability();
 					if (carPart.stats.GetStat(inStat) < num)
 					{
 						return true;
