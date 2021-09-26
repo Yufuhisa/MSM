@@ -80,7 +80,7 @@ public class UIScoutingScoutWidget : MonoBehaviour
 				UIScoutingEntry uiscoutingEntry = this.grid.CreateListItem<UIScoutingEntry>();
 				if (this.mScoutingManager.IsSlotLocked(i))
 				{
-					int inLevelRequired = i - this.mScoutingManager.baseScoutingSlotsCount;
+					int inLevelRequired = i - this.mScoutingManager.baseScoutingSlotsCount + 1;
 					uiscoutingEntry.SetupLocked(inLevelRequired);
 				}
 				else if (this.mScoutingManager.IsSlotEmpty(i))

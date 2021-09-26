@@ -22,7 +22,7 @@ public class UIScoutingEntry : MonoBehaviour
 		GameUtility.SetActive(this.emptyState, false);
 		GameUtility.SetActive(this.lockedState, true);
 		GameUtility.SetActive(this.onGoingState, false);
-		if (inLevelRequired == 0)
+		if (inLevelRequired == 1)
 		{
 			this.mScoutingLevelRequired = Localisation.LocaliseID("PSG_10010499", null);
 		}
