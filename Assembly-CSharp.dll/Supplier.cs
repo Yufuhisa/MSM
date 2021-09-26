@@ -227,6 +227,8 @@ public class Supplier
 
 	public float maxHarvestEfficiencyModifier;
 
+	public float maxReliablity;
+
 	public Dictionary<CarChassisStats.Stats, float> supplierStats = new Dictionary<CarChassisStats.Stats, float>();
 
 	public Dictionary<Supplier.CarAspect, float> carAspectMinBoundary = new Dictionary<Supplier.CarAspect, float>();

@@ -248,11 +248,19 @@ public class CarPartDesign
 		int num = this.seasonPartStartingStat[inPart.GetPartType()];
 		float inValue = (float)(num + Mathf.FloorToInt(engineer.stats.partContributionStats.GetStat(inPart.stats.statType)));
 		inPart.stats.level = this.GetLevelFromComponents(inPart);
-		inPart.stats.maxPerformance = this.mTeam.carManager.GetCar(0).ChassisStats.improvability * 2f;
+		inPart.stats.maxPerformance = GameStatsConstants.baseCarPartPerformance;
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
-		inPart.stats.maxReliability = GameStatsConstants.initialMaxReliabilityValue;
 		inPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
 		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
+		// calculate max reliability (for engine control)
+		if (inPart.GetPartType() != CarPart.PartType.Engine)
+			inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
+		else
+		{
+			float maxReliablityEnigne = this.team.carManager.GetCar(0).ChassisStats.supplierEngine.maxReliablity;
+			float maxReliablityModFuel = this.team.carManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
+			inPart.stats.SetMaxReliability(maxReliablityEnigne + maxReliablityModFuel);
+		}
 	}
 
 	private int GetLevelFromComponents(CarPart inPart)

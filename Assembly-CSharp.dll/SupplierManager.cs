@@ -52,6 +52,7 @@ public class SupplierManager : InstanceCounter
 				supplier.chargeSize = databaseEntry.GetIntValue("Charge Size");
 				supplier.tier = databaseEntry.GetIntValue("Tier");
 				supplier.descriptionID = databaseEntry.GetStringValue("Description");
+				supplier.maxReliablity = databaseEntry.GetFloatValue("Max Reliability") / 100f;
 				string stringValue2 = databaseEntry.GetStringValue("BatteryType");
 				supplier.advancedBatteryType = (Supplier.AdvancedERSBatteryType)((!string.IsNullOrEmpty(stringValue2)) ? ((int)Enum.Parse(typeof(Supplier.AdvancedERSBatteryType), stringValue2)) : 0);
 				this.LoadTeamDiscounts(supplier, databaseEntry);
