@@ -192,7 +192,7 @@ public class CarPartCondition
 	{
 		// fault chance relative to reliablity
 		float baseFaultChance = 0.05f;
-		float[] faultChanceEach5Percent = new float[] {0.00f, 0.08f, 0.07f, 0.06f, 0.05f, 0.06f, 0.07f, 0.08f};
+		float[] faultChanceEach5Percent = new float[] {0.00f, 0.08f, 0.07f, 0.07f, 0.06f, 0.07f, 0.08f, 0.08f};
 
 		float faultChance = baseFaultChance;
 		float compareReliability = 1f;
@@ -226,13 +226,14 @@ public class CarPartCondition
 
 	public float GetNextConditionLoss(float inCondition, CarPart.PartType inType, RacingVehicle inVehicle)
 	{
+		float num = 0f;
 		if (this.BonusConditionLossPrevented() || inVehicle.timer.hasSeenChequeredFlag || inVehicle.behaviourManager.isOutOfRace)
 		{
 			return 0f;
 		}
 		if (inType == CarPart.PartType.Engine)
 		{
-			float num = RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 			switch (inVehicle.performance.fuel.engineMode)
 			{
 				case Fuel.EngineMode.SuperOvertake:
@@ -249,29 +250,32 @@ public class CarPartCondition
 					num *= 0.5f;
 					break;
 			}
-			return num;
 		}
 		if (inType == CarPart.PartType.Brakes)
 		{
-			return RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 		}
 		if (inType == CarPart.PartType.Gearbox)
 		{
-			return RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 		}
 		if (inType == CarPart.PartType.Suspension)
 		{
-			return RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 		}
 		if (inType == CarPart.PartType.FrontWing)
 		{
-			return RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 		}
 		if (inType == CarPart.PartType.RearWing)
 		{
-			return RandomUtility.GetRandom(0.015f, 0.02f);
+			num = RandomUtility.GetRandom(0.015f, 0.02f);
 		}
-		return 0f;
+		// in red zone part wear is 20% higher
+		if (inCondition <= this.redZone) {
+			num *= 1.2f;
+		}
+		return num;
 	}
 
 	public void DecrementCondition(CarPart.PartType inType, RacingVehicle inVehicle)
