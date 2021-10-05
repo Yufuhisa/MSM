@@ -186,25 +186,77 @@ public class Championship : Entity
 				entity2.carManager.AdaptPartsForNewSeason(null);
 			}
 		}
-		if (flag)
-		{
-			List<CarStats> list2 = new List<CarStats>();
-			for (int l = 0; l < this.standings.teamEntryCount; l++)
-			{
-				Team entity3 = this.standings.GetTeamEntry(l).GetEntity<Team>();
-				list2.Add(TeamStatistics.GetPartRankingsForChampionship(entity3));
+
+		// recalculate stats for alle part types
+		CarPart.PartType[] partType = CarPart.GetPartType(this.series, false);
+		List<CarPart> parts;
+		float mainStat;
+		float newMainStat;
+		float minStat = 600f;
+		float maxStat = 850f;
+		foreach (CarPart.PartType inType in partType) {
+
+			// skip step for Engines, there performance is decided by suppliers
+			if (inType == CarPart.PartType.Engine)
+				continue;
+
+			// find best and worst performance stat over all teams
+			float bestStat  = float.MinValue;
+			float worstStat = float.MaxValue;
+
+			for (int n_team = 0; n_team < this.standings.teamEntryCount; n_team++) {
+				team = this.standings.GetTeamEntry(n_team).GetEntity<Team>();
+				if (team == null)
+					continue;
+				parts = team.carManager.partInventory.GetPartInventory(inType);
+				for (int n_part = 0; n_part < parts.Count; n_part++) {
+					mainStat = parts[n_part].stats.statWithPerformance;
+					if (mainStat < worstStat)
+						worstStat = mainStat;
+					if (mainStat > bestStat)
+						bestStat = mainStat;
+				}
 			}
-			for (int m = 0; m < this.standings.teamEntryCount; m++)
-			{
-				Team entity4 = this.standings.GetTeamEntry(m).GetEntity<Team>();
-				CarStats inStatRankings = list2[m];
-				entity4.carManager.ResetParts(inStatRankings);
-				if (entity4.IsPlayersTeam())
-				{
-					Game.instance.dialogSystem.OnPartReset();
+
+			// calculate factor to keep stat inside boundries
+			float factor = (maxStat - minStat) / (bestStat - worstStat);
+			if (factor > 1f)
+				factor = 1f;
+
+			if (this.championshipID == 0) {
+				global::Debug.LogErrorFormat("Stats for PartType {0} are: worst = {1}; best = {2}; factor is {3}", new object[] {
+					inType,
+					worstStat,
+					bestStat,
+					factor.ToString("0.00")
+				});
+			}
+
+			// set main stat within boundry
+			for (int n_team = 0; n_team < this.standings.teamEntryCount; n_team++) {
+				team = this.standings.GetTeamEntry(n_team).GetEntity<Team>();
+				if (team == null)
+					continue;
+				parts = team.carManager.partInventory.GetPartInventory(inType);
+				for (int n_part = 0; n_part < parts.Count; n_part++) {
+					mainStat = parts[n_part].stats.statWithPerformance;
+					// calculate new main stat
+					newMainStat = maxStat - ((bestStat - mainStat) * factor);
+					// set new main stat
+					parts[n_part].stats.SetStat(CarPartStats.CarPartStat.MainStat, newMainStat);
+
+					if (this.championshipID == 0) {
+						global::Debug.LogErrorFormat("New Part Stats for Team {0} PartNum {1}; before: {2}; after: {3}", new object[] {
+							team.GetShortName(false),
+							n_part,
+							mainStat,
+							newMainStat
+						});
+					}
 				}
 			}
 		}
+
 		this.rules.ApplySpecParts();
 	}
 

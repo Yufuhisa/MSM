@@ -58,6 +58,9 @@ public class PartsDatabase
 	private static void LoadPartData(CarManager inCarManager, CarPart.PartType inType, Championship inChampionship, DatabaseEntry inData)
 	{
 		CarPart carPart = CarPart.CreatePartEntity(inType, inCarManager.team.championship);
+		// initialize basic part stats
+		inCarManager.SetPartBasicStats(carPart);
+
 		float inValue = 0f;
 		switch (carPart.stats.statType)
 		{
@@ -80,13 +83,25 @@ public class PartsDatabase
 			inValue = inData.GetFloatValue("HSC");
 			break;
 		}
-		carPart.stats.SetMaxReliability(inData.GetFloatValue("Max Reliability") / 100f);
-		carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
-		carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inData.GetFloatValue("Reliability") / 100f);
-		carPart.stats.partCondition.SetCondition(inData.GetFloatValue("Condition") / 100f);
-		carPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		carPart.stats.maxPerformance = (float)(inData.GetIntValue("Performance Improvability") * 3);
-		carPart.buildDate = Game.instance.time.now.AddDays((double)(-(double)inData.GetIntValue("Age")));
+
+		// override performance and reliability for engines with supplier values
+		if (inType == CarPart.PartType.Engine) {
+			int performanceEnigne = inCarManager.GetCar(0).ChassisStats.supplierEngine.randomEngineLevelModifier;
+			int performanceModFuel = inCarManager.GetCar(0).ChassisStats.supplierFuel.randomEngineLevelModifier;
+			int statWithPerformance = (performanceEnigne + performanceModFuel);
+			carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, statWithPerformance);
+
+			float maxReliablityEnigne = inCarManager.GetCar(0).ChassisStats.supplierEngine.maxReliablity;
+			float maxReliablityModFuel = inCarManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
+			carPart.stats.SetMaxReliability(maxReliablityEnigne + maxReliablityModFuel);
+			// initial engine parts have already max reliability
+			carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, maxReliablityEnigne + maxReliablityModFuel);
+		}
+		else {
+			carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
+			carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inData.GetFloatValue("Reliability") / 100f);
+		}
+
 		carPart.PostStatsSetup(inChampionship);
 		inCarManager.partInventory.AddPart(carPart);
 	}

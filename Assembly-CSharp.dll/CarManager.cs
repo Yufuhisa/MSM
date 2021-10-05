@@ -651,17 +651,29 @@ public class CarManager
 			global::Debug.Assert(!carPart.isBanned, "Banned part got through to next season, this should not happen ever.");
 			if (!this.mTeam.championship.rules.specParts.Contains(carPart.GetPartType()))
 			{
-				float statWithPerformance = carPart.stats.statWithPerformance;
 				this.SetPartBasicStats(carPart);
-				float stat = personOnJob.stats.partContributionStats.GetStat(CarPart.GetStatForPartType(carPart.GetPartType()));
+				float statWithPerformance;
+				float statBonusEngineer;
+				if (carPart.GetPartType() == CarPart.PartType.Engine) {
+					// engine performance is decided by suppliers
+					int performanceEnigne = this.mTeam.carManager.GetCar(0).ChassisStats.supplierEngine.randomEngineLevelModifier;
+					int performanceModFuel = this.mTeam.carManager.GetCar(0).ChassisStats.supplierFuel.randomEngineLevelModifier;
+					statWithPerformance = (performanceEnigne + performanceModFuel);
+					statBonusEngineer = 0f;
+				}
+				else
+				{
+					statWithPerformance = carPart.stats.statWithPerformance;
+					statBonusEngineer = personOnJob.stats.partContributionStats.GetStat(CarPart.GetStatForPartType(carPart.GetPartType()));
+				}
 				if (inStats == null)
 				{
-					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, statWithPerformance + stat);
+					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, statWithPerformance + statBonusEngineer);
 				}
 				else
 				{
 					CarStats.StatType statForPartType = CarPart.GetStatForPartType(carPart.GetPartType());
-					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inStats.GetStat(statForPartType) + stat);
+					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inStats.GetStat(statForPartType) + statBonusEngineer);
 				}
 			}
 			this.partInventory.AddPart(carPart);
@@ -691,13 +703,13 @@ public class CarManager
 		}
 	}
 
-	private void SetPartBasicStats(CarPart inPart)
+	public void SetPartBasicStats(CarPart inPart)
 	{
 		inPart.stats.level = 0;
-		float inValue = 0.4f + RandomUtility.GetRandom(0f, 0.1f);
-		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inValue);
+		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
+		inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Performance, 0f);
-		inPart.stats.maxPerformance = (float)RandomUtility.GetRandom(1, 10);
+		inPart.stats.maxPerformance = GameStatsConstants.baseCarPartPerformance;
 		inPart.stats.rulesRisk = 0f;
 		inPart.partCondition.redZone = GameStatsConstants.initialRedZone;
 		inPart.components = new List<CarPartComponent>();
@@ -959,4 +971,3 @@ public class CarManager
 		Lowest
 	}
 }
-
