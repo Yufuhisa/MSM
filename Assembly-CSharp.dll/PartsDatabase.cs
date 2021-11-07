@@ -100,6 +100,7 @@ public class PartsDatabase
 		else {
 			carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
 			carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inData.GetFloatValue("Reliability") / 100f);
+			carPart.stats.SetMaxReliability(inData.GetFloatValue("Max Reliability") / 100f);
 		}
 
 		carPart.PostStatsSetup(inChampionship);
