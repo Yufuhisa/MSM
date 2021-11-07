@@ -29,7 +29,7 @@ public class SessionEvents : InstanceCounter
 			case SessionEvents.EventType.SpinOut:
 				return this.IsReadyToSpin();
 			case SessionEvents.EventType.LockUp:
-				return true;//this.IsReadyToLockUp();
+				return false;//this.IsReadyToLockUp();
 		}
 		return false;
 	}
