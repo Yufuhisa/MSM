@@ -245,21 +245,22 @@ public class CarPartDesign
 	{
 		Engineer engineer = (Engineer)this.mTeam.contractManager.GetPersonOnJob(Contract.Job.EngineerLead);
 		inPart.stats = new CarPartStats(inPart);
-		int num = this.seasonPartStartingStat[inPart.GetPartType()];
-		float inValue = (float)(num + Mathf.FloorToInt(engineer.stats.partContributionStats.GetStat(inPart.stats.statType)));
+		float startMainStat = this.seasonPartStartingStat[inPart.GetPartType()];
+		float engineerModifier = engineer.stats.partContributionStats.GetStat(inPart.stats.statType);
+		float mainStat = startMainStat + (engineerModifier * CarPartDesign.ENGINEER_SKILL_MAINSTAT_MOD);
 		inPart.stats.level = this.GetLevelFromComponents(inPart);
 		inPart.stats.maxPerformance = GameStatsConstants.baseCarPartPerformance;
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
 		inPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inValue);
-		// calculate max reliability (for engine control)
+		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, mainStat);
 		if (inPart.GetPartType() != CarPart.PartType.Engine)
-			inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
+			inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100));
 		else
 		{
+			// calculate max reliability (for engine control)
 			float maxReliablityEnigne = this.team.carManager.GetCar(0).ChassisStats.supplierEngine.maxReliablity;
 			float maxReliablityModFuel = this.team.carManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
-			inPart.stats.SetMaxReliability(maxReliablityEnigne + maxReliablityModFuel);
+			inPart.stats.SetMaxReliability(maxReliablityEnigne + maxReliablityModFuel + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100));
 		}
 	}
 
@@ -983,6 +984,9 @@ public class CarPartDesign
 			return this.mTeam;
 		}
 	}
+
+	public readonly static float ENGINEER_SKILL_MAXRELIABLITY_MOD = 0.2f;
+	public readonly static float ENGINEER_SKILL_MAINSTAT_MOD = 1.5f;
 
 	public Action OnDesignModified;
 
