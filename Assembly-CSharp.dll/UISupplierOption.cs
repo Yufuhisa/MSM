@@ -56,11 +56,19 @@ public class UISupplierOption : MonoBehaviour
 		inSupplierLogoWidget.SetLogo(inSupplier);
 		switch (inSupplier.supplierType)
 		{
-		case Supplier.SupplierType.Engine:
 		case Supplier.SupplierType.Fuel:
 			UISupplierOption.SetStatString(inStatLabels[0], inSupplier.supplierStats[CarChassisStats.Stats.FuelEfficiency]);
-			UISupplierOption.SetStatString(inStatLabels[1], inSupplier.supplierStats[CarChassisStats.Stats.Improvability]);
-			inStatLabels[2].text = ((inSupplier.supplierType != Supplier.SupplierType.Engine) ? "-" : string.Format("+{0}", inSupplier.randomEngineLevelModifier.ToString()));
+			UISupplierOption.SetFuelStatString(inStatLabels[1], inSupplier.maxReliablity * 100f);
+			UISupplierOption.SetFuelStatString(inStatLabels[2], inSupplier.randomEngineLevelModifier);
+			GameUtility.SetActiveAndCheckNull(inParentObjects[0], true);
+			GameUtility.SetActiveAndCheckNull(inParentObjects[1], true);
+			GameUtility.SetActiveAndCheckNull(inParentObjects[2], true);
+			GameUtility.SetActiveAndCheckNull(inParentObjects[3], false);
+			break;
+		case Supplier.SupplierType.Engine:
+			UISupplierOption.SetStatString(inStatLabels[0], inSupplier.supplierStats[CarChassisStats.Stats.FuelEfficiency]);
+			inStatLabels[1].text = string.Format("{0}", (inSupplier.maxReliablity * 100f).ToString("#00"));
+			inStatLabels[2].text = string.Format("{0}", inSupplier.randomEngineLevelModifier.ToString("##00"));
 			GameUtility.SetActiveAndCheckNull(inParentObjects[0], true);
 			GameUtility.SetActiveAndCheckNull(inParentObjects[1], true);
 			GameUtility.SetActiveAndCheckNull(inParentObjects[2], true);
@@ -108,12 +116,12 @@ public class UISupplierOption : MonoBehaviour
 
 	public static void SetStatString(TextMeshProUGUI inLabel, float inValue)
 	{
-		if (inValue > 6f)
+		if (inValue > 8f)
 		{
 			inLabel.color = UIConstants.positiveColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010192", null);
 		}
-		else if (inValue > 5f)
+		else if (inValue > 6f)
 		{
 			inLabel.color = UIConstants.positiveColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010191", null);
@@ -123,7 +131,7 @@ public class UISupplierOption : MonoBehaviour
 			inLabel.color = UIConstants.mailMedia;
 			inLabel.text = Localisation.LocaliseID("PSG_10010190", null);
 		}
-		else if (inValue > 3f)
+		else if (inValue > 2f)
 		{
 			inLabel.color = UIConstants.negativeColor;
 			inLabel.text = Localisation.LocaliseID("PSG_10010189", null);
@@ -136,6 +144,24 @@ public class UISupplierOption : MonoBehaviour
 
 		// add value to general quality description (only for testing purpose?)
 		inLabel.text += " (" + inValue.ToString("0.0") + ")";
+	}
+
+	public static void SetFuelStatString(TextMeshProUGUI inLabel, float modifier) {
+		if (modifier > 0f)
+		{
+			inLabel.color = UIConstants.positiveColor;
+			inLabel.text = string.Format("+{0}", modifier.ToString("##0"));
+		}
+		else if (modifier == 0f)
+		{
+			inLabel.color = Color.grey;
+			inLabel.text = "-";
+		}
+		else
+		{
+			inLabel.color = UIConstants.negativeColor;
+			inLabel.text = string.Format("{0}", modifier.ToString("##0"));
+		}
 	}
 
 	public void OnMouseEnter()
