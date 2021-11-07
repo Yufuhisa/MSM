@@ -134,7 +134,22 @@ public class Supplier
 
 	public void RollRandomBaseStatModifier()
 	{
-		if (this.supplierType == Supplier.SupplierType.Engine)
+	/*
+		if (this.supplierType == Supplier.SupplierType.Engine || this.supplierType == Supplier.SupplierType.Fuel)
+		{
+			this.mRandomEngineLevelModifier = RandomUtility.GetRandomInc(this.minEngineLevelModifier, this.maxEngineLevelModifier);
+		}
+		if (this.supplierType == Supplier.SupplierType.Battery || this.supplierType == Supplier.SupplierType.ERSAdvanced)
+		{
+			this.mRandomHarvestEfficiencyModifier = RandomUtility.GetRandom(this.minHarvestEfficiencyModifier, this.maxHarvestEfficiencyModifier);
+			this.supplierStats[CarChassisStats.Stats.HarvestEfficiency] = this.mRandomHarvestEfficiencyModifier;
+		}
+	*/
+	}
+
+	public void RollRandomBaseStatModifier2()
+	{
+		if (this.supplierType == Supplier.SupplierType.Engine || this.supplierType == Supplier.SupplierType.Fuel)
 		{
 			this.mRandomEngineLevelModifier = RandomUtility.GetRandomInc(this.minEngineLevelModifier, this.maxEngineLevelModifier);
 		}
@@ -154,23 +169,31 @@ public class Supplier
 		return string.Empty;
 	}
 
-	// get quality of supplier, for TeamAIController, to find best supplier
 	public float GetQuality() {
+		return this.GetQuality(0.5f);
+	}
+	// get quality of supplier, for TeamAIController, to find best supplier
+	public float GetQuality(float inAggressivness) {
 		float quality = 0f;
 		switch (this.supplierType) {
 			case Supplier.SupplierType.Engine:
-				quality += this.supplierStats[CarChassisStats.Stats.FuelEfficiency];
-				quality += this.supplierStats[CarChassisStats.Stats.Improvability];
-				// TODO first find how this is influencing engine stats
-				//quality += this.randomEngineLevelModifier;
+				float effiency = this.supplierStats[CarChassisStats.Stats.FuelEfficiency] * Supplier.QUALITY_ENGINE_MOD_FE;
+				float performance = (float)this.randomEngineLevelModifier * Supplier.QUALITY_ENGINE_MOD_ELM;
+				float reliability = this.maxReliablity * Supplier.QUALITY_ENGINE_MOD_REL;
+
+				quality = effiency
+				        + (performance / (1 - inAggressivness))
+				        + (reliability / inAggressivness)
+				;
 				break;
 			case Supplier.SupplierType.Brakes:
 				quality += this.supplierStats[CarChassisStats.Stats.TyreWear];
 				quality += this.supplierStats[CarChassisStats.Stats.TyreHeating];
 				break;
 			case Supplier.SupplierType.Fuel:
-				quality += this.supplierStats[CarChassisStats.Stats.FuelEfficiency];
-				quality += this.supplierStats[CarChassisStats.Stats.Improvability];
+				quality = (this.maxReliablity / inAggressivness)
+				        + ((float)this.randomEngineLevelModifier / (1 - inAggressivness))
+				;
 				break;
 			case Supplier.SupplierType.Materials:
 				quality += this.supplierStats[CarChassisStats.Stats.TyreWear];
@@ -184,7 +207,11 @@ public class Supplier
 		return quality;
 	}
 
-	private readonly float mPriceMultiplier = 100000f;
+	private readonly float mPriceMultiplier = 92000f;
+
+	public static readonly float QUALITY_ENGINE_MOD_FE = 20f;
+	public static readonly float QUALITY_ENGINE_MOD_REL = 850f;
+	public static readonly float QUALITY_ENGINE_MOD_ELM = 1.3f;
 
 	public Supplier.SupplierType supplierType = Supplier.SupplierType.Brakes;
 
@@ -228,6 +255,9 @@ public class Supplier
 	public float maxHarvestEfficiencyModifier;
 
 	public float maxReliablity;
+
+	public int curContracts; // current number of team contracts
+	public int numContracts; // max number of team contracts
 
 	public Dictionary<CarChassisStats.Stats, float> supplierStats = new Dictionary<CarChassisStats.Stats, float>();
 

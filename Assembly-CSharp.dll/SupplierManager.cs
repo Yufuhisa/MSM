@@ -55,6 +55,7 @@ public class SupplierManager : InstanceCounter
 				supplier.maxReliablity = databaseEntry.GetFloatValue("Max Reliability") / 100f;
 				string stringValue2 = databaseEntry.GetStringValue("BatteryType");
 				supplier.advancedBatteryType = (Supplier.AdvancedERSBatteryType)((!string.IsNullOrEmpty(stringValue2)) ? ((int)Enum.Parse(typeof(Supplier.AdvancedERSBatteryType), stringValue2)) : 0);
+				supplier.numContracts = databaseEntry.GetIntValue("Contracts");
 				this.LoadTeamDiscounts(supplier, databaseEntry);
 				this.LoadTeamsThatCannotBuy(supplier, databaseEntry);
 				this.AddStat(supplier, CarChassisStats.Stats.TyreWear, "Tyre Wear", databaseEntry);
@@ -96,8 +97,26 @@ public class SupplierManager : InstanceCounter
 						break;
 					}
 				}
+				supplier.RollRandomBaseStatModifier2();
 				this.mSuppliers.Add(supplier);
 			}
+		}
+	}
+
+	public void rollRandomBaseStatModifiers(int inSupplierTier) {
+		for (int i = 0; i < this.mSuppliers.Count; i++)
+		{
+			if (this.mSuppliers[i].tier == inSupplierTier)
+			{
+				this.mSuppliers[i].RollRandomBaseStatModifier2();
+			}
+		}
+	}
+
+	public void ResetContractsForTier(int inSupplierTier) {
+		for (int i = 0; i < this.mSuppliers.Count; i++) {
+			if (mSuppliers[i].tier == inSupplierTier)
+				mSuppliers[i].curContracts = 0;
 		}
 	}
 
@@ -454,7 +473,7 @@ public class SupplierManager : InstanceCounter
 	public List<Supplier> GetSuppliersForTeam(Supplier.SupplierType inSupplierType, Team inTeam, bool checkCanBuy)
 	{
 		int championshipID = inTeam.championship.championshipID;
-		int num = championshipID + 1;
+		int tier = championshipID + 1;
 		List<Supplier> list = this.GetSupplierList(inSupplierType);
 
 		List<Supplier> list2 = new List<Supplier>();
@@ -467,6 +486,9 @@ public class SupplierManager : InstanceCounter
 			// for chassi, filter non availble team chassi for AI (player should at least see it, even if not available to select)
 			if (!inTeam.IsPlayersTeam() && !list[i].chassiIsAvailable)
 				flag = false;
+			// for AI hide suppliers with already max number of contracts
+			if (!inTeam.IsPlayersTeam() && list[i].curContracts >= list[i].numContracts)
+				flag = false;
 			// for engines in tier 1 check if team rang ist high enough for this supplier
 			int teamLastRank = 12;
 			if (inTeam.history.HasPreviousSeasonHistory()) {
@@ -475,7 +497,7 @@ public class SupplierManager : InstanceCounter
 			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1 && list[i].minRang != 0 && list[i].minRang < teamLastRank)
 				flag = false;
 
-			if (flag && list[i].tier == num)
+			if (flag && list[i].tier == tier)
 				list2.Add(list[i]);
 		}
 		return list2;

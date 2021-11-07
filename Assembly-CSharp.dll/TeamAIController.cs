@@ -270,7 +270,7 @@ public class TeamAIController
 		long num = this.mTeam.financeController.finance.currentBudget - this.mTeam.financeController.GetRacePaymentValue(TeamFinanceController.RacePaymentType.Medium) * 2L;
 		foreach (List<Supplier> list in inSuppliers)
 		{
-			list.Sort((Supplier x, Supplier y) => x.GetQuality().CompareTo(y.GetQuality()));
+			list.Sort((Supplier x, Supplier y) => x.GetQuality(this.mTeam.aiWeightings.mAggressiveness).CompareTo(y.GetQuality(this.mTeam.aiWeightings.mAggressiveness)));
 		}
 		long num2 = 0L;
 		int num3 = -1;
@@ -340,21 +340,27 @@ public class TeamAIController
 			{
 			case Supplier.SupplierType.Engine:
 				carChassisStats.supplierEngine = array[n];
+				carChassisStats.supplierEngine.curContracts += 1;
 				break;
 			case Supplier.SupplierType.Brakes:
 				carChassisStats.supplierBrakes = array[n];
+				carChassisStats.supplierBrakes.curContracts += 1;
 				break;
 			case Supplier.SupplierType.Fuel:
 				carChassisStats.supplierFuel = array[n];
+				carChassisStats.supplierFuel.curContracts += 1;
 				break;
 			case Supplier.SupplierType.Materials:
 				carChassisStats.supplierMaterials = array[n];
+				carChassisStats.supplierMaterials.curContracts += 1;
 				break;
 			case Supplier.SupplierType.Battery:
 				carChassisStats.supplierBattery = array[n];
+				carChassisStats.supplierBattery.curContracts += 1;
 				break;
 			case Supplier.SupplierType.ERSAdvanced:
 				carChassisStats.supplierERSAdvanced = array[n];
+				carChassisStats.supplierERSAdvanced.curContracts += 1;
 				break;
 			}
 		}
