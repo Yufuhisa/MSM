@@ -93,33 +93,33 @@ public class Championship : Entity
 		{
 			App.instance.gameStateManager.SetState(GameState.Type.PreSeasonState, GameStateManager.StateChangeType.CheckForFadedScreenChange, false);
 		}
-		for (int i = 0; i < this.standings.teamEntryCount; i++)
+
+		// on season start Reroll supplier random modifiers for this championship suppliers
+		Game.instance.supplierManager.rollRandomBaseStatModifiers(this.championshipID + 1);
+		// reset number of contracts for supplier
+		Game.instance.supplierManager.ResetContractsForTier(this.championshipID + 1);
+
+		// create new shuffled team list (teams should select suppliers in random order, because some suppliers only accept limited number of contracts)
+		Team[] teamList = new Team[this.standings.teamEntryCount];
+		for (int i = 0; i < this.standings.teamEntryCount; i++) {
+			teamList[i] = this.standings.GetTeamEntry(i).GetEntity<Team>();
+		}
+		// Fisher-Yates shuffle for team list
+		for (int i = 0; i < teamList.Length; i++) {
+			int k = RandomUtility.GetRandom(0, teamList.Length - 1);
+			Team team = teamList[k];
+			teamList[k] = teamList[i];
+			teamList[i] = team;
+		}
+
+		for (int i = 0; i < teamList.Length; i++)
 		{
-			Team entity = this.standings.GetTeamEntry(i).GetEntity<Team>();
-			entity.OnPreSeasonStart();
+			global::Debug.LogErrorFormat("PreSeason Preperation for Team {0}", new object[] { teamList[i].GetShortName() });
+			teamList[i].OnPreSeasonStart();
 		}
 		this.GenerateCalendarEvents();
 		this.politicalSystem.GenerateCalendarEvents();
 		Game.instance.calendar.UpdateEventsShownOnCalendar();
-		if (!Game.instance.player.IsUnemployed())
-		{
-			Team team = Game.instance.player.team;
-			List<Supplier> list = new List<Supplier>(Game.instance.supplierManager.GetSuppliersForTeam(Supplier.SupplierType.Engine, team, false));
-			List<Supplier> list2 = new List<Supplier>(Game.instance.supplierManager.GetSuppliersForTeam(Supplier.SupplierType.Battery, team, false));
-			List<Supplier> list3 = new List<Supplier>(Game.instance.supplierManager.GetSuppliersForTeam(Supplier.SupplierType.ERSAdvanced, team, false));
-			for (int j = 0; j < list.Count; j++)
-			{
-				list[j].RollRandomBaseStatModifier();
-			}
-			for (int k = 0; k < list2.Count; k++)
-			{
-				list2[k].RollRandomBaseStatModifier();
-			}
-			for (int l = 0; l < list3.Count; l++)
-			{
-				list3[l].RollRandomBaseStatModifier();
-			}
-		}
 	}
 
 	public void OnPartAdaptation(bool inResetPartDevelopment = false)
@@ -129,6 +129,7 @@ public class Championship : Entity
 			Team entity = this.standings.GetTeamEntry(i).GetEntity<Team>();
 			entity.carManager.carPartDesign.FinishPartImmediatly();
 		}
+		PartTypeSlotSettings partTypeSlotSettings;
 		Team team = (this.inPromotedTeamFromLowerTier == null) ? null : this.inPromotedTeamFromLowerTier.team;
 		Team team2 = (this.inRelegatedTeamFromHigherTier == null) ? null : this.inRelegatedTeamFromHigherTier.team;
 		List<CarPart.PartType> list = new List<CarPart.PartType>();
@@ -144,7 +145,7 @@ public class Championship : Entity
 			CarPart.PartType partForStatType = CarPart.GetPartForStatType(statType, this.series);
 			if (partForStatType != CarPart.PartType.None)
 			{
-				PartTypeSlotSettings partTypeSlotSettings = Game.instance.partSettingsManager.championshipPartSettings[this.championshipID][partForStatType];
+				partTypeSlotSettings = Game.instance.partSettingsManager.championshipPartSettings[this.championshipID][partForStatType];
 				for (int j = 0; j < carStandingsOnStat.Count; j++)
 				{
 					CarPart part = carStandingsOnStat[j].GetPart(partForStatType);
@@ -192,9 +193,16 @@ public class Championship : Entity
 		List<CarPart> parts;
 		float mainStat;
 		float newMainStat;
-		float minStat = 600f;
-		float maxStat = 850f;
+
+		float minStat;
+		float maxStat;
+
 		foreach (CarPart.PartType inType in partType) {
+
+			// MinMax Stat for parts from championship
+			partTypeSlotSettings = Game.instance.partSettingsManager.championshipPartSettings[this.championshipID][inType];
+			minStat = partTypeSlotSettings.championshipMinStat;
+			maxStat = partTypeSlotSettings.championshipMaxStat;
 
 			// skip step for Engines, there performance is decided by suppliers
 			if (inType == CarPart.PartType.Engine)
