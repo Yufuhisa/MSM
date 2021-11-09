@@ -81,7 +81,7 @@ public class UITimedRaceEntry : MonoBehaviour
 		}
 		this.positionLabel.text = inPosition.ToString();
 		this.changeLabel.text = Mathf.Abs(inPreviousPosition - inPosition).ToString();
-		this.teamNameLabel.text = team.name;
+		this.teamNameLabel.text = team.GetTeamNameForUI();
 		this.mData.lapsToLeader = inFirstPlaceEntry.laps - this.mData.laps;
 		if (this.mData.position == 1)
 		{

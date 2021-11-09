@@ -33,7 +33,7 @@ public class UIStandingsTeamEntry : MonoBehaviour
 		this.teamStrip.color = this.mTeam.GetTeamColor().primaryUIColour.normal;
 		int currentChampionshipPosition = this.mChampionshipEntry.GetCurrentChampionshipPosition();
 		this.positionNumber.text = currentChampionshipPosition.ToString();
-		this.teamName.text = this.mTeam.name;
+		this.teamName.text = this.mTeam.GetTeamNameForUI();
 		this.wins.text = this.mChampionshipEntry.wins.ToString();
 		int num = (!this.mCurrentStandings) ? this.mChampionshipEntry.GetPointsForEvent(this.mChampionshipEntry.pointsEntryCount - 1) : this.mChampionshipEntry.GetCurrentPoints();
 		this.points.text = num.ToString();

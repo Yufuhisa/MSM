@@ -62,7 +62,7 @@ public class UIGridDriverWidget : MonoBehaviour
 		this.driverPortrait.SetPortrait(this.driver);
 		this.driverPortrait.SetDriverFormType(true);
 		this.driverFlag.SetNationality(this.driver.nationality);
-		this.teamName.text = this.driver.contract.GetTeam().name;
+		this.teamName.text = this.driver.contract.GetTeam().GetTeamNameForUI();
 		this.uiCar.SetTeamColor(this.driver.contract.GetTeam().GetTeamColor().carColor);
 		if (this.driver.IsPlayersDriver())
 		{

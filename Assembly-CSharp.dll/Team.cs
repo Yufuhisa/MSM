@@ -634,6 +634,13 @@ public class Team : Entity
 		return GameUtility.ColorToRichTextHex(this.GetTeamColor().primaryUIColour.normal) + this.name + "</color>";
 	}
 
+	public string GetTeamNameForUI()
+	{
+		String teamName = this.mShortName;
+		String supName = this.carManager.GetCar(0).ChassisStats.supplierEngine.name;
+		return (teamName.Equals(supName) ? teamName : teamName + " - " + supName);
+	}
+
 	public TeamColor GetTeamColor()
 	{
 		return App.instance.teamColorManager.GetColor(this.colorID);
