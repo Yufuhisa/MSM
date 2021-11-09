@@ -75,7 +75,11 @@ public class CarChassisStats
 		case CarChassisStats.Stats.FuelEfficiency:
 			return this.mFuelEfficiency + num;
 		case CarChassisStats.Stats.Improvability:
-			return this.mImprovability + num;
+			float reliability = (supplierEngine.maxReliablity + supplierFuel.maxReliablity) * 100f;
+			reliability -= 55f;
+			reliability /= 45f;
+			reliability *= 20f;
+			return reliability;
 		case CarChassisStats.Stats.StartingCharge:
 			return this.mStartingCharge + num;
 		case CarChassisStats.Stats.HarvestEfficiency:
