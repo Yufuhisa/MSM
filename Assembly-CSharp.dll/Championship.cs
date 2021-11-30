@@ -236,15 +236,6 @@ public class Championship : Entity
 			if (factor > 1f)
 				factor = 1f;
 
-			if (this.championshipID == 0) {
-				global::Debug.LogErrorFormat("Stats for PartType {0} are: worst = {1}; best = {2}; factor is {3}", new object[] {
-					inType,
-					worstStat,
-					bestStat,
-					factor.ToString("0.00")
-				});
-			}
-
 			// set main stat within boundry
 			for (int n_team = 0; n_team < this.standings.teamEntryCount; n_team++) {
 				team = this.standings.GetTeamEntry(n_team).GetEntity<Team>();
@@ -257,15 +248,6 @@ public class Championship : Entity
 					newMainStat = maxStat - ((bestStat - mainStat) * factor);
 					// set new main stat
 					parts[n_part].stats.SetStat(CarPartStats.CarPartStat.MainStat, newMainStat);
-
-					if (this.championshipID == 0) {
-						global::Debug.LogErrorFormat("New Part Stats for Team {0} PartNum {1}; before: {2}; after: {3}", new object[] {
-							team.GetShortName(false),
-							n_part,
-							mainStat,
-							newMainStat
-						});
-					}
 				}
 			}
 		}
