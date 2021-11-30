@@ -101,17 +101,6 @@ public class NextYearCarDesign
 		this.mTeam.carManager.ApplyNewCarDesigns(this.mChassisStats);
 		this.mChassisStats = null;
 		this.state = NextYearCarDesign.State.Complete;
-		if (!this.mTeam.championship.rules.specParts.Contains(CarPart.PartType.Engine))
-		{
-			List<CarPart> partInventory = this.mTeam.carManager.partInventory.GetPartInventory(CarPart.PartType.Engine);
-			for (int i = 0; i < partInventory.Count; i++)
-			{
-				float statWithPerformance = partInventory[i].stats.statWithPerformance;
-				partInventory[i].stats.SetStat(CarPartStats.CarPartStat.Performance, 0f);
-				partInventory[i].stats.maxPerformance = (float)RandomUtility.GetRandomInc(5, 10);
-				partInventory[i].stats.SetStat(CarPartStats.CarPartStat.MainStat, statWithPerformance + (float)this.mEngineModifier);
-			}
-		}
 	}
 
 	public NextYearCarDesign.State state = NextYearCarDesign.State.WaitingForDesign;
