@@ -477,6 +477,15 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 				if (teamLastRank >= 6)
 					return Person.InterestedToTalkResponseType.TeamRangToLow;
 			}
+			if (!driver.IsFreeAgent())
+			{
+				// if driver for F1 Team and currently mid season (not pre season, last race not finished) -> decline new contract
+				Championship driverChampionship = this.contract.GetTeam().championship;
+				if (driverChampionship.championshipID == 0
+				&& !driverChampionship.InPreseason()
+				&& driverChampionship.GetFinalEventDetails().eventDate >= Game.instance.time.now)
+					return Person.InterestedToTalkResponseType.F1MidSeason;
+			}
 		}
 		if (flag2)
 		{
@@ -1149,6 +1158,7 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 		WontDriveForThatSeries,
 		OffendedByInterview,
 		InvestorDriverAgeTooHigh,
-		TeamRangToLow
+		TeamRangToLow,
+		F1MidSeason
 	}
 }

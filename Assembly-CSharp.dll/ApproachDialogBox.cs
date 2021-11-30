@@ -356,6 +356,8 @@ public class ApproachDialogBox : UIDialogBox
 			return Localisation.LocaliseID("PSG_10012273", null);
 		case Person.InterestedToTalkResponseType.TeamRangToLow:
 			return Localisation.LocaliseID("PSG_11000000", null);
+		case Person.InterestedToTalkResponseType.F1MidSeason:
+			return Localisation.LocaliseID("PSG_11000001", null);
 		}
 		return Localisation.LocaliseID("PSG_10009263", null);
 	}
