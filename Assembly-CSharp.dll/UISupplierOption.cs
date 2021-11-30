@@ -44,11 +44,6 @@ public class UISupplierOption : MonoBehaviour
 			this.canvasGroup.alpha = 0.2f;
 			this.canvasGroup.interactable = false;
 		}
-
-		if (this.mSupplier.supplierType == Supplier.SupplierType.Fuel)
-		{
-			GameUtility.SetActive(this.statParentObjects[2], false);
-		}
 	}
 
 	public static void SetupSupplierDetails(Supplier inSupplier, UISupplierLogoWidget inSupplierLogoWidget, GameObject[] inParentObjects, params TextMeshProUGUI[] inStatLabels)
@@ -228,7 +223,7 @@ public class UISupplierOption : MonoBehaviour
 
 	private bool showDetails ()
 	{
-		return (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team) || this.mSupplier.supplierType == Supplier.SupplierType.Engine || this.mSupplier.supplierType == Supplier.SupplierType.Materials);
+		return (this.mSupplier.HasDiscountWithTeam(Game.instance.player.team) || this.mSupplier.supplierType == Supplier.SupplierType.Engine);
 	}
 
 	public UISupplierLogoWidget supplierLogoWidget;

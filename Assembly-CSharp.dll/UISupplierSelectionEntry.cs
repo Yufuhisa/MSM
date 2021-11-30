@@ -46,15 +46,8 @@ public class UISupplierSelectionEntry : MonoBehaviour
 		case Supplier.SupplierType.Fuel:
 			this.statOne.text = Localisation.LocaliseID("PSG_10004256", null);
 			this.statTwo.text = Localisation.LocaliseID("PSG_10004258", null);
-			if (this.mSupplierType == Supplier.SupplierType.Engine)
-			{
-				GameUtility.SetActive(this.thirdStatOption, true);
-				this.statThree.text = Localisation.LocaliseID("PSG_10011045", null);
-			}
-			else
-			{
-				GameUtility.SetActive(this.thirdStatOption, false);
-			}
+			GameUtility.SetActive(this.thirdStatOption, true);
+			this.statThree.text = Localisation.LocaliseID("PSG_10011045", null);
 			break;
 		case Supplier.SupplierType.Brakes:
 		case Supplier.SupplierType.Materials:
