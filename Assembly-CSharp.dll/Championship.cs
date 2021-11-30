@@ -83,7 +83,6 @@ public class Championship : Entity
 
 	private void OnPreSeasonStart()
 	{
-		this.OnPartAdaptation(false);
 		if (this.isPlayerChampionship)
 		{
 			App.instance.gameStateManager.SetState(GameState.Type.PreSeasonState, GameStateManager.StateChangeType.CheckForFadedScreenChange, false);
@@ -216,14 +215,20 @@ public class Championship : Entity
 				team = this.standings.GetTeamEntry(n_team).GetEntity<Team>();
 				if (team == null)
 					continue;
-				parts = team.carManager.partInventory.GetPartInventory(inType);
-				for (int n_part = 0; n_part < parts.Count; n_part++) {
-					mainStat = parts[n_part].stats.statWithPerformance;
-					if (mainStat < worstStat)
-						worstStat = mainStat;
-					if (mainStat > bestStat)
-						bestStat = mainStat;
-				}
+
+				// get mean performance of 2 best parts for this team
+				CarPart bestPart1 = team.carManager.partInventory.GetHighestStatPartOfType(inType);
+				team.carManager.partInventory.RemovePart(bestPart1);
+				CarPart bestPart2 = team.carManager.partInventory.GetHighestStatPartOfType(inType);
+				team.carManager.partInventory.AddPart(bestPart1);
+
+				mainStat = (bestPart1.stats.statWithPerformance + bestPart2.stats.statWithPerformance) / 2;
+
+				// update worst and best performance (for all teams)
+				if (mainStat < worstStat)
+					worstStat = mainStat;
+				if (mainStat > bestStat)
+					bestStat = mainStat;
 			}
 
 			// calculate factor to keep stat inside boundries
@@ -358,6 +363,7 @@ public class Championship : Entity
 			Team entity = this.standings.GetTeamEntry(i).GetEntity<Team>();
 			entity.OnPreSeasonEnd();
 		}
+		this.OnPartAdaptation(false);
 		this.SetCurrentSeasonDates();
 		this.OnSeasonStart();
 		this.inPromotedTeamFromLowerTier = null;
