@@ -842,19 +842,6 @@ public class ContractManagerTeam
 			this.mTeam.teamAIController.RemoveDriverFromScoutingJobs(driver);
 			this.mTeam.teamAIController.EvaluateDriverLineUp();
 		}
-		if (this.mTeam.IsPlayersTeam())
-		{
-			global::Debug.LogErrorFormat("HireNewDriver - Player Team Driver 1 is {0} and has CarID {1}", new object[]
-			{
-				this.mTeam.GetDriver(0).shortName,
-				this.mTeam.GetDriver(0).carID
-			});
-			global::Debug.LogErrorFormat("HireNewDriver - Player Team Driver 2 is {0} and has CarID {1}", new object[]
-			{
-				this.mTeam.GetDriver(1).shortName,
-				this.mTeam.GetDriver(1).carID
-			});
-		}
 	}
 
 	public void FireNextYearDriver(Person inDriverToFire)
@@ -897,6 +884,7 @@ public class ContractManagerTeam
 
 	public void ReplaceCurrentDriverWithNewOne(ContractPerson inDraftContract, Person inNewPersonToHire, Person inPersonToReplace)
 	{
+		int oldID = ((Driver)inPersonToReplace).carID;
 		StringVariableParser.personReplaced = inPersonToReplace;
 		inDraftContract.SetCurrentStatus(inPersonToReplace.contract.currentStatus);
 		this.FireDriver(inPersonToReplace, Contract.ContractTerminationType.FiredByPlayer);
@@ -907,6 +895,7 @@ public class ContractManagerTeam
 		{
 			driver.carOpinion.CalculateDriverOpinions(driver);
 		}
+		driver.SetCarID(oldID);
 		if (this.mTeam.IsPlayersTeam())
 		{
 			global::Debug.LogErrorFormat("ReplaceCurrentDriverWithNewOne - Player Team Driver 1 is {0} and has CarID {1}", new object[]
