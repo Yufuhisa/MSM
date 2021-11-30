@@ -113,22 +113,26 @@ public class CarPartDesign
 
 	public void SetSeasonStartingStats()
 	{
-		foreach (CarPart.PartType partType2 in CarPart.GetPartType(this.mTeam.championship.series, false))
+		foreach (CarPart.PartType partType in CarPart.GetPartType(this.mTeam.championship.series, false))
 		{
-			CarPart partWithHighestStat = this.mTeam.carManager.partInventory.GetPartWithHighestStat(partType2, CarPartStats.CarPartStat.MainStat);
-			global::Debug.Assert(partWithHighestStat != null, string.Format("{0} Original part is null, maybe theres no part being added from the database? Continuing with dummy data", partType2));
+			// find best performance off all parts
+			int bestPerformance = 0;
+			CarPart partWithHighestStat = this.mTeam.carManager.partInventory.GetPartWithHighestStat(partType, CarPartStats.CarPartStat.MainStat);
 			if (partWithHighestStat == null)
-			{
 				this.mTeam.carManager.ResetParts(new CarStats());
-			}
-			if (partWithHighestStat != null)
-			{
-				this.seasonPartStartingStat[partType2] = (int)partWithHighestStat.stats.statWithPerformance;
-			}
 			else
-			{
-				this.seasonPartStartingStat[partType2] = 0;
+				bestPerformance = (int)partWithHighestStat.stats.statWithPerformance;
+
+			// find best maxReliablity off all parts
+			float bestMaxReliability = 0f;
+			foreach (CarPart carPart in this.mTeam.carManager.partInventory.GetPartInventory(partType)) {
+				if (!carPart.isBanned && bestMaxReliability < carPart.stats.GetMaxReliability())
+					bestMaxReliability = carPart.stats.GetMaxReliability();
 			}
+
+			// save max values for new part designs
+			this.seasonPartStartingStat[partType] = bestPerformance;
+			this.seasonPartStartingReli[partType] = bestMaxReliability;
 		}
 	}
 
@@ -245,23 +249,21 @@ public class CarPartDesign
 	{
 		Engineer engineer = (Engineer)this.mTeam.contractManager.GetPersonOnJob(Contract.Job.EngineerLead);
 		inPart.stats = new CarPartStats(inPart);
-		float startMainStat = this.seasonPartStartingStat[inPart.GetPartType()];
+
 		float engineerModifier = engineer.stats.partContributionStats.GetStat(inPart.stats.statType);
+
+		float startMainStat = this.seasonPartStartingStat[inPart.GetPartType()];
 		float mainStat = startMainStat + (engineerModifier * CarPartDesign.ENGINEER_SKILL_MAINSTAT_MOD);
+		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, mainStat);
+
+		float startMaxReliablity = this.seasonPartStartingReli[inPart.GetPartType()];
+		float maxReliablity = startMaxReliablity + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100);
+		inPart.stats.SetMaxReliability(maxReliablity);
+
 		inPart.stats.level = this.GetLevelFromComponents(inPart);
 		inPart.stats.maxPerformance = GameStatsConstants.baseCarPartPerformance;
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
 		inPart.stats.partCondition.redZone = GameStatsConstants.initialRedZone;
-		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, mainStat);
-		if (inPart.GetPartType() != CarPart.PartType.Engine)
-			inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100));
-		else
-		{
-			// calculate max reliability (for engine control)
-			float maxReliablityEnigne = this.team.carManager.GetCar(0).ChassisStats.supplierEngine.maxReliablity;
-			float maxReliablityModFuel = this.team.carManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
-			inPart.stats.SetMaxReliability(maxReliablityEnigne + maxReliablityModFuel + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100));
-		}
 	}
 
 	private int GetLevelFromComponents(CarPart inPart)
@@ -1025,6 +1027,8 @@ public class CarPartDesign
 	private CarPartComponent mRandomComponent;
 
 	private Dictionary<CarPart.PartType, int> seasonPartStartingStat = new Dictionary<CarPart.PartType, int>();
+
+	private Dictionary<CarPart.PartType, float> seasonPartStartingReli = new Dictionary<CarPart.PartType, float>();
 
 	private Dictionary<int, List<CarPartComponent>> brakeComponents = new Dictionary<int, List<CarPartComponent>>();
 
