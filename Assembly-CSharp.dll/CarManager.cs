@@ -630,18 +630,35 @@ public class CarManager
 	{
 		List<CarPart> list = new List<CarPart>();
 		CarPart.PartType[] partType = CarPart.GetPartType(this.mTeam.championship.series, false);
-		for (int i = 0; i < CarManager.carCount; i++)
+
+		float[] partTypeMaxReliability = new float[(int)CarPart.PartType.Last];
+		for (int i = 0; i < partTypeMaxReliability.Length; i++)
+			partTypeMaxReliability[i] = 0.74f;
+
+		// find best parts as next season starting parts
+		// and calculate mean reliability for those parts for next season starting reliability
+		foreach (CarPart.PartType inType in partType)
 		{
-			foreach (CarPart.PartType inType in partType)
+			float sumReliability = 0f;
+			float divReliability = 0f;
+
+			for (int i = 0; i < CarManager.carCount; i++)
 			{
 				CarPart highestStatPartOfType = this.partInventory.GetHighestStatPartOfType(inType);
 				if (highestStatPartOfType != null)
 				{
+					sumReliability += highestStatPartOfType.stats.GetStat(CarPartStats.CarPartStat.Reliability);
+					divReliability += 1f;
 					this.partInventory.RemovePart(highestStatPartOfType);
 					list.Add(highestStatPartOfType);
 				}
 			}
+			if (divReliability > 0f)
+				partTypeMaxReliability[(int)inType] = sumReliability / divReliability;
+			if (partTypeMaxReliability[(int)inType] < 0.74f)
+				partTypeMaxReliability[(int)inType] = 0.74f;
 		}
+
 		this.partInventory.DestroyAllParts();
 		Engineer personOnJob = this.mTeam.contractManager.GetPersonOnJob<Engineer>(Contract.Job.EngineerLead);
 		for (int k = 0; k < list.Count; k++)
@@ -651,28 +668,45 @@ public class CarManager
 			if (!this.mTeam.championship.rules.specParts.Contains(carPart.GetPartType()))
 			{
 				this.SetPartBasicStats(carPart);
-				float statWithPerformance;
+				float startPerformance;
+				float startReliability;
+				float startMaxReliability = GameStatsConstants.initialMaxReliabilityValue;
 				float statBonusEngineer;
 				if (carPart.GetPartType() == CarPart.PartType.Engine) {
 					// engine performance is decided by suppliers
 					int performanceEnigne = this.mTeam.carManager.GetCar(0).ChassisStats.supplierEngine.randomEngineLevelModifier;
 					int performanceModFuel = this.mTeam.carManager.GetCar(0).ChassisStats.supplierFuel.randomEngineLevelModifier;
-					statWithPerformance = (performanceEnigne + performanceModFuel);
+					startPerformance = (performanceEnigne + performanceModFuel);
 					statBonusEngineer = 0f;
+					// engine maxReliability is decided by suppliers as well
+					float maxReliablityEnigne = this.team.carManager.GetCar(0).ChassisStats.supplierEngine.maxReliablity;
+					float maxReliablityModFuel = this.team.carManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
+					startMaxReliability = maxReliablityEnigne + maxReliablityModFuel;
+					// engine reliability starts as max value
+					startReliability = startMaxReliability;
 				}
 				else
 				{
-					statWithPerformance = carPart.stats.statWithPerformance;
+					startPerformance = carPart.stats.statWithPerformance;
 					statBonusEngineer = personOnJob.stats.partContributionStats.GetStat(CarPart.GetStatForPartType(carPart.GetPartType()));
+					// start with 65%
+					// add reliability of old part above 74% / 3 (a value between 0% and 8%)
+					startReliability = 0.65f + ((partTypeMaxReliability[(int)carPart.GetPartType()] - 0.74f) / 3f);
 				}
 				if (inStats == null)
 				{
-					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, statWithPerformance + statBonusEngineer);
+					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, startPerformance + statBonusEngineer);
+					carPart.stats.SetMaxReliability(startMaxReliability);
+					carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, startReliability);
+					// reset performance development
+					carPart.stats.SetStat(CarPartStats.CarPartStat.Performance, 0f);
 				}
 				else
 				{
 					CarStats.StatType statForPartType = CarPart.GetStatForPartType(carPart.GetPartType());
 					carPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inStats.GetStat(statForPartType) + statBonusEngineer);
+					carPart.stats.SetMaxReliability(startMaxReliability);
+					carPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, startReliability);
 				}
 			}
 			this.partInventory.AddPart(carPart);
@@ -684,8 +718,8 @@ public class CarManager
 	public void SetPartBasicStats(CarPart inPart)
 	{
 		inPart.stats.level = 0;
-		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
 		inPart.stats.SetMaxReliability(GameStatsConstants.initialMaxReliabilityValue);
+		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, GameStatsConstants.initialReliabilityValue);
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Performance, 0f);
 		inPart.stats.maxPerformance = GameStatsConstants.baseCarPartPerformance;
 		inPart.stats.rulesRisk = 0f;
