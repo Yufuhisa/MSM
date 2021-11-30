@@ -616,7 +616,6 @@ public class CarManager
 		}
 		this.AutoFit(this.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
 		this.AutoFit(this.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		this.SetMechanicsContribution(this.partInventory.GetAllParts());
 	}
 
 	public void AutofitBothCars()
@@ -680,27 +679,6 @@ public class CarManager
 		}
 		this.AutoFit(this.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
 		this.AutoFit(this.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		this.SetMechanicsContribution(list);
-	}
-
-	private void SetMechanicsContribution(List<CarPart> parts)
-	{
-		Mechanic mechanicOfDriver = this.mTeam.GetMechanicOfDriver(this.mTeam.GetDriverForCar(0));
-		Mechanic mechanicOfDriver2 = this.mTeam.GetMechanicOfDriver(this.mTeam.GetDriverForCar(1));
-		for (int i = 0; i < parts.Count; i++)
-		{
-			CarPart carPart = parts[i];
-			Mechanic mechanic;
-			if (carPart.fittedCar.identifier == 0)
-			{
-				mechanic = mechanicOfDriver;
-			}
-			else
-			{
-				mechanic = mechanicOfDriver2;
-			}
-			carPart.stats.maxPerformance = (float)Mathf.FloorToInt(mechanic.stats.performance);
-		}
 	}
 
 	public void SetPartBasicStats(CarPart inPart)
