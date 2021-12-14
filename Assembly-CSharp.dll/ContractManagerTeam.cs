@@ -884,6 +884,7 @@ public class ContractManagerTeam
 
 	public void ReplaceCurrentDriverWithNewOne(ContractPerson inDraftContract, Person inNewPersonToHire, Person inPersonToReplace)
 	{
+		int newID = ((Driver)inNewPersonToHire).carID;
 		int oldID = ((Driver)inPersonToReplace).carID;
 		StringVariableParser.personReplaced = inPersonToReplace;
 		inDraftContract.SetCurrentStatus(inPersonToReplace.contract.currentStatus);
@@ -895,20 +896,20 @@ public class ContractManagerTeam
 		{
 			driver.carOpinion.CalculateDriverOpinions(driver);
 		}
-		driver.SetCarID(oldID);
-		if (this.mTeam.IsPlayersTeam())
-		{
-			global::Debug.LogErrorFormat("ReplaceCurrentDriverWithNewOne - Player Team Driver 1 is {0} and has CarID {1}", new object[]
-			{
-				this.mTeam.GetDriver(0).shortName,
-				this.mTeam.GetDriver(0).carID
-			});
-			global::Debug.LogErrorFormat("ReplaceCurrentDriverWithNewOne - Player Team Driver 2 is {0} and has CarID {1}", new object[]
-			{
-				this.mTeam.GetDriver(1).shortName,
-				this.mTeam.GetDriver(1).carID
-			});
+		if (this.mTeam.championship.series != Championship.Series.EnduranceSeries) {
+			driver.SetCarID(oldID);
 		}
+/*
+		global::Debug.LogErrorFormat("ReplaceCurrentDriverWithNewOne - Old driver {0} ID {1}->{2} with new Driver {3} ID {4}->{5}", new object[]
+		{
+			inPersonToReplace.shortName,
+			oldID,
+			((Driver)inPersonToReplace).carID,
+			inNewPersonToHire.shortName,
+			newID,
+			((Driver)inNewPersonToHire).carID
+		});
+*/
 	}
 
 	public void ReplacePersonWithNewOne(ContractPerson inDraftContract, Person inNewPersonToHire, Person inPersonToReplace)
