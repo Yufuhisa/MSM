@@ -15,10 +15,6 @@
     
   <!-- RACE LENGTH DISTANCES -->
   <RaceLength>
-  
-	<GameStartDateYear>1997</GameStartDateYear>
-	<GameStartDateMonth>3</GameStartDateMonth>
-	<GameStartDateDay>1</GameStartDateDay>
     
     <ShortRaceLengthInMiles>50</ShortRaceLengthInMiles>
     <MediumRaceLengthInMiles>85</MediumRaceLengthInMiles>
