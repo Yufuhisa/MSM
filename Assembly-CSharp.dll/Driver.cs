@@ -1169,7 +1169,24 @@ public class Driver : Person
 
 	protected override bool WontRenewContract(Team inTeam)
 	{
-		return this.personalityTraitController.HasSpecialCase(PersonalityTrait.SpecialCaseType.WIllNotRenewContract) && this.personalityTraitController.HasRivalInTeam(inTeam);
+		// morale check
+		if (this.GetMorale() < 0.4f) {
+			int teamLastRank = 12;
+			if (inTeam != null && inTeam.history.HasPreviousSeasonHistory()) {
+				teamLastRank = inTeam.history.previousSeasonTeamResult;
+			}
+			// if team is not top 3 -> 65% do not renew
+			if (teamLastRank > 3 && RandomUtility.GetRandom01() < 0.65f) {
+				return true;
+			}
+		}
+		// personality trait check
+		if (this.personalityTraitController.HasSpecialCase(PersonalityTrait.SpecialCaseType.WIllNotRenewContract))
+			return true;
+		// rival check
+		if (this.personalityTraitController.HasRivalInTeam(inTeam))
+			return true;
+		return false;
 	}
 
 	public bool HasFightWithTeammate(Driver inTeammate)
