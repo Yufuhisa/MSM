@@ -1610,7 +1610,63 @@ public class TeamAIController
 
 	private bool ShouldRenew(Driver inDriver)
 	{
-		return this.mSeasonWeight > 0f && !inDriver.contract.IsContractedForNextSeason() && inDriver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk;
+		// no renew mid season
+		if (this.mSeasonWeight == 0f)
+			return false;
+		// no renew if driver already has contract for next season
+		if (inDriver.contract.IsContractedForNextSeason())
+			return false;
+
+		int teamLastRank = 12;
+		if (this.mTeam.history.HasPreviousSeasonHistory()) {
+			teamLastRank = this.mTeam.history.previousSeasonTeamResult;
+		}
+
+		float driverStars = inDriver.GetDriverStats().GetAbility();
+		float driverPotentialStars = inDriver.GetDriverStats().GetAbilityPotential();
+		bool driverIsInteressted = (inDriver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk);
+
+		if (inDriver.IsReserveDriver())
+		{
+			// rules for reserve drivers
+
+			// Team Rank 7-12 -> Age <= 25 or out
+			if (teamLastRank > 6 && inDriver.GetAge() <= 25)
+				return driverIsInteressted;
+			// Team Rank 1-6 -> 2.5 Stars and feedback >= 10 or out
+			if (teamLastRank <= 6 && driverStars >= 2.5f && inDriver.GetDriverStats().feedback >= 10)
+				return driverIsInteressted;
+		}
+		else
+		{
+			// rules for main drivers
+
+			if (teamLastRank > 6) {
+				// for Rank 7-12 -> flat 50% chance to renew
+				if (RandomUtility.GetRandom01() < 0.5f)
+					return driverIsInteressted;
+			}
+			if (teamLastRank > 3)
+			{
+				// for Rank 3-6 -> depending on stars and potential
+				if (driverStars >= 3.5f)
+					return driverIsInteressted;
+				else if (driverStars >= 3f && driverPotentialStars >= 4f && RandomUtility.GetRandom01() < 0.75f)
+					return driverIsInteressted;
+				else if (RandomUtility.GetRandom01() < 0.1f)
+					return driverIsInteressted;
+			}
+			else
+			{
+				// for Rank 1-3 -> depending on stars and potential
+				if (driverStars >= 4f)
+					return driverIsInteressted;
+				else if (driverStars >= 3.5f && driverPotentialStars >= 4.5f && RandomUtility.GetRandom01() < 0.5f)
+					return driverIsInteressted;
+			}
+		}
+
+		return false;
 	}
 
 	private void Renew(Driver inDriver)
