@@ -58,7 +58,7 @@ public class ContractManagerPerson
 		this.mContractYear = inContractYear;
 		this.contractEvaluation.SetupForEvaluation(this.mNegotiationType, this.mDraftProposalContract);
 		Team team = inDraftContract.GetTeam();
-		int random = RandomUtility.GetRandom(5, 10);
+		int random = RandomUtility.GetRandom(1, 3);
 		StringVariableParser.sender = inDraftContract.person;
 		this.mCalendarConsideredEvent = new CalendarEvent_v1
 		{
