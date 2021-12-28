@@ -1256,14 +1256,23 @@ public class TeamAIController
 			bool flag2 = flag || (Game.instance.time.now - lCurDriver.contract.startDate).Days > TeamAIController.hireStaffCooldownDays;
 			bool flag3 = false;
 			bool flag4 = false;
+
+			DateTime newYearContractsLower = new DateTime(Game.instance.time.now.Year, 12, 30);
+			// days after preSeason
+			int curDayForNewContracts = Game.instance.time.now.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear + 1;
+			// preSeason days for new/renew driver contracts
+			int daysForNewContracts = newYearContractsLower.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear;
+			
 			if (negotiationEntry == null && flag2)
 			{
 				bool flag5 = false;
+				// fire?
 				if (flag || this.ShouldFire(lCurDriver))
 				{
 					flag5 = true;
 					flag3 = !flag;
 				}
+				// driver leaves? (always false)
 				else if (lCurDriver.WantsToLeave() || lCurDriver.IsOpenToOffers())
 				{
 					if (this.AllowToLeave(lCurDriver))
@@ -1272,15 +1281,23 @@ public class TeamAIController
 						flag4 = true;
 					}
 				}
-				else if (this.mTeam.championship.InPreseason() && Game.instance.time.now.Month > 6 && !lCurDriver.contract.IsContractedForNextSeason())
+				// year end driver movements/renew
+				// F1: by chance, starting with preSeason, 100% at 29.12.
+				// Other Championships: All on 30.12.
+				else if (this.mTeam.championship.InPreseason() && !lCurDriver.contract.IsContractedForNextSeason())
 				{
-					if (this.ShouldRenew(lCurDriver))
+					if ((Game.instance.time.now.DayOfYear >= newYearContractsLower.DayOfYear)
+					 || (this.mTeam.championship.championshipID == 0 && (1f / (float)daysForNewContracts * (float)curDayForNewContracts > RandomUtility.GetRandom01()))
+					)
 					{
-						this.Renew(lCurDriver);
-					}
-					else
-					{
-						flag5 = true;
+						if (this.ShouldRenew(lCurDriver))
+						{
+							this.Renew(lCurDriver);
+						}
+						else
+						{
+							flag5 = true;
+						}
 					}
 				}
 				if (flag5)
