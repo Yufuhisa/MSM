@@ -126,7 +126,10 @@ public static class GameStatsConstants
 		412,
 		413,
 		414,
-		415
+		415,
+		420,
+		421,
+		422
 	};
 
 	public static int[] criticalInjuryTraits = new int[]
@@ -150,6 +153,9 @@ public static class GameStatsConstants
 		413, // sharing cockpit (workarround for AI to use testdriver) - 15 weeks
 		414, // sharing cockpit (workarround for AI to use testdriver) - 17 weeks
 		415, // sharing cockpit (workarround for AI to use testdriver) - 22 weeks
+		420, // dizziness Heinz Harald Frentzen - 3 weeks
+		421, // temporary promoted reserve driver (Alex Yoong) - 38 weeks
+		422  // last chance for Matzakane (Burti 2001) - 10 weeks
 	};
 
 	public static int daysRecoveredFromSittingOut = 2;
