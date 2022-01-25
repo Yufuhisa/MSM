@@ -1596,6 +1596,14 @@ public class Team : Entity
 		return inActiveDriver[0].lastName;
 	}
 
+	public int GetChampionshipRang() {
+		int teamLastRank = 12;
+		if (this.history.HasPreviousSeasonHistory()) {
+			teamLastRank = this.history.previousSeasonTeamResult;
+		}
+		return teamLastRank;
+	}
+
 	public Person teamAssistant
 	{
 		get

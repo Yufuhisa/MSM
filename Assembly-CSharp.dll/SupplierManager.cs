@@ -490,10 +490,7 @@ public class SupplierManager : InstanceCounter
 			if (!inTeam.IsPlayersTeam() && list[i].curContracts >= list[i].numContracts)
 				flag = false;
 			// for engines in tier 1 check if team rang ist high enough for this supplier
-			int teamLastRank = 12;
-			if (inTeam.history.HasPreviousSeasonHistory()) {
-				teamLastRank = inTeam.history.previousSeasonTeamResult;
-			}
+			int teamLastRank = inTeam.GetChampionshipRang();
 			if (inSupplierType == Supplier.SupplierType.Engine && list[i].tier == 1 && list[i].minRang != 0 && list[i].minRang < teamLastRank)
 				flag = false;
 

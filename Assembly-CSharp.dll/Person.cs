@@ -470,10 +470,7 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 				return Person.InterestedToTalkResponseType.OffendedByInterview;
 			}
 			if (championshipOrder == 0 && MathsUtility.RoundToScale(driver.GetStats().GetAbility(), 4f) >= 4.25f) {
-				int teamLastRank = 12;
-				if (inTeam.history.HasPreviousSeasonHistory()) {
-					teamLastRank = inTeam.history.previousSeasonTeamResult;
-				}
+				int teamLastRank = inTeam.GetChampionshipRang();
 				if (teamLastRank >= 6)
 					return Person.InterestedToTalkResponseType.TeamRangToLow;
 			}

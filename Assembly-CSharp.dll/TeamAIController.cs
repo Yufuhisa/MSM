@@ -1617,10 +1617,7 @@ public class TeamAIController
 		if (inDriver.contract.IsContractedForNextSeason())
 			return false;
 
-		int teamLastRank = 12;
-		if (this.mTeam.history.HasPreviousSeasonHistory()) {
-			teamLastRank = this.mTeam.history.previousSeasonTeamResult;
-		}
+		int teamLastRank = this.mTeam.GetChampionshipRang();
 
 		float driverStars = inDriver.GetDriverStats().GetAbility();
 		float driverPotentialStars = inDriver.GetDriverStats().GetAbilityPotential();
