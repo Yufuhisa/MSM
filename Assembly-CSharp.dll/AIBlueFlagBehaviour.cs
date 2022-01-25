@@ -110,7 +110,7 @@ public class AIBlueFlagBehaviour : AIBehaviour
 				{
 					GateInfo gateTimer = sessionManager.GetGateTimer(inVehicleBehind.pathController.GetPreviousGate().id);
 					float timeGapBetweenVehicles = gateTimer.GetTimeGapBetweenVehicles(inVehicleAhead, inVehicleBehind);
-					if (timeGapBetweenVehicles < 2f || inVehicleAhead.performance.IsExperiencingCriticalIssue())
+					if (timeGapBetweenVehicles < 0.5f || inVehicleAhead.performance.IsExperiencingCriticalIssue())
 					{
 						return true;
 					}
