@@ -1298,12 +1298,25 @@ public class TeamAIController
 						{
 							flag5 = true;
 						}
+					int searchType = 0;
+					if (this.mTeam.championship.championshipID == 0) {
+						// search pattern for reserve driver
+						if (lCurDriver.IsReserveDriver())
+							searchType = 2;
+							//searchType = TeamAIController.DriverSearchType.ReserveDriver;
+						// search pattern for Top 3 Teams
+						else if (this.mTeam.GetChampionshipRang() <= 3)
+							searchType = 1;
+							//searchType = TeamAIController.DriverSearchType.TopTeam;
+						// if lower half Team and tight on budget search for pay driver
+						else if (this.mTeam.GetChampionshipRang() > 6 && this.mTeam.financeController.GetTotalAvailableFunds() < 15000000L && (paydriver == null || paydriver == lCurDriver))
+							searchType = 3;
+							//searchType = TeamAIController.DriverSearchType.PayDriver;
 					}
 				}
 				if (flag5)
 				{
 					bool inReplaceWithReserve = false;
-					Driver reserveDriver = this.mTeam.GetReserveDriver();
 					Driver driver = this.FindReplacementDriver(lCurDriver, flag4, 0.75f);
 					if (reserveDriver != null)
 					{
@@ -1319,6 +1332,7 @@ public class TeamAIController
 							else
 							{
 								driver = null;
+					Driver newDriver = this.FindReplacementDriver(lCurDriver, searchType);
 							}
 						}
 					}

@@ -89,18 +89,33 @@ public class Driver : Person
 		this.driverStamina.Reset();
 	}
 
-	public float GetStatsForAITeamComparison(Team inTeam)
+	public float GetStatsForAITeamComparison(Team inTeam, int inSearchType)
 	{
 		this.mStatsForAITeamEval.Clear();
 		this.mStatsForAITeamEval.Add(this.mStats);
 		this.personalityTraitController.GetDriverPermanentStatsModifier(ref this.mStatsForAITeamEval);
-		if (inTeam != null && inTeam.championship.series == Championship.Series.EnduranceSeries)
-		{
-			this.mStatsForAITeamEval.Multiply(0.5f);
-			this.mStatsForAITeamEval.fitness *= 2f;
-			this.mStatsForAITeamEval.focus *= 2f;
+		if (inSearchType == 1) {
+			// all race relevant attributes +50%
+			this.mStatsForAITeamEval.braking *= 1.5f;
+			this.mStatsForAITeamEval.cornering *= 1.5f;
+			this.mStatsForAITeamEval.smoothness *= 1.5f;
+			this.mStatsForAITeamEval.overtaking *= 1.5f;
+		}
+		else if (inSearchType == 2) {
+			// for testdriver feedback makes (roughly) half of the score
+			return (this.mStatsForAITeamEval.GetAbility() / 9) + this.mStatsForAITeamEval.feedback;
+		}
+		else if (inSearchType == 3) {
+			// add 1000 points for paydriver
+			if (this.personalityTraitController.HasTrait(false, new int[] {165}))
+				return this.mStatsForAITeamEval.GetAbility() + 1000f;
 		}
 		return this.mStatsForAITeamEval.GetAbility();
+	}
+
+	public float GetStatsForAITeamComparison(Team inTeam)
+	{
+		return this.GetStatsForAITeamComparison(inTeam, 0);
 	}
 
 	public void GetTraitRefreshTypes(out bool OutOnEnterGate, out bool OutOnNewSetup, out bool OutOnNewLap)
