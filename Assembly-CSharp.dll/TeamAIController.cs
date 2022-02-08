@@ -1642,11 +1642,15 @@ public class TeamAIController
 			// rules for reserve drivers
 
 			// Team Rank 7-12 -> Age <= 25 or out
-			if (teamLastRank > 6 && inDriver.GetAge() <= 25)
+			if (teamLastRank > 6 && inDriver.GetAge() <= 25) {
+				global::Debug.LogErrorFormat("Result: reserve driver - Team Rank 7-12 -> Age <= 25; Driver Response: {0}", new object[] {driverResponse});
 				return driverIsInteressted;
+			}
 			// Team Rank 1-6 -> 2.5 Stars and feedback >= 10 or out
-			if (teamLastRank <= 6 && driverStars >= 2.5f && inDriver.GetDriverStats().feedback >= 10)
+			if (teamLastRank <= 6 && driverStars >= 2.5f && inDriver.GetDriverStats().feedback >= 10) {
+				global::Debug.LogErrorFormat("Result: reserve driver - Team Rank 1-6 -> 2.5 Stars and feedback >= 10; Driver Response: {0}", new object[] {driverResponse});
 				return driverIsInteressted;
+			}
 		}
 		else
 		{
@@ -1654,26 +1658,38 @@ public class TeamAIController
 
 			if (teamLastRank > 6) {
 				// for Rank 7-12 -> flat 50% chance to renew
-				if (RandomUtility.GetRandom01() < 0.5f)
+				if (RandomUtility.GetRandom01() < 0.5f) {
+					global::Debug.LogErrorFormat("Result: main drivers - for Rank 7-12 -> flat 50% chance; Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
+				}
 			}
 			if (teamLastRank > 3)
 			{
 				// for Rank 3-6 -> depending on stars and potential
-				if (driverStars >= 3.5f)
+				if (driverStars >= 3.5f) {
+					global::Debug.LogErrorFormat("Result: main drivers - Rank 3-6 (driverStars >= 3.5f); Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
-				else if (driverStars >= 3f && driverPotentialStars >= 4f && RandomUtility.GetRandom01() < 0.75f)
+				}
+				else if (driverStars >= 3f && driverPotentialStars >= 4f && RandomUtility.GetRandom01() < 0.75f) {
+					global::Debug.LogErrorFormat("Result: main drivers - Rank 3-6 (driverStars >= 3f && driverPotentialStars >= 4f && RandomUtility.GetRandom01() < 0.75f); Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
-				else if (RandomUtility.GetRandom01() < 0.1f)
+				}
+				else if (RandomUtility.GetRandom01() < 0.1f) {
+					global::Debug.LogErrorFormat("Result: main drivers - Rank 3-6 (RandomUtility.GetRandom01() < 0.1f); Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
+				}
 			}
 			else
 			{
 				// for Rank 1-3 -> depending on stars and potential
-				if (driverStars >= 4f)
+				if (driverStars >= 4f) {
+					global::Debug.LogErrorFormat("Result: main drivers - Rank 1-3 (driverStars >= 4f); Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
-				else if (driverStars >= 3.5f && driverPotentialStars >= 4.5f && RandomUtility.GetRandom01() < 0.5f)
+				}
+				else if (driverStars >= 3.5f && driverPotentialStars >= 4.5f && RandomUtility.GetRandom01() < 0.5f) {
+					global::Debug.LogErrorFormat("Result: main drivers - Rank 1-3 (driverStars >= 3.5f && driverPotentialStars >= 4.5f && RandomUtility.GetRandom01() < 0.5f); Driver Response: {0}", new object[] {driverResponse});
 					return driverIsInteressted;
+				}
 			}
 		}
 
