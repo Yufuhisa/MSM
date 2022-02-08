@@ -1248,6 +1248,14 @@ public class TeamAIController
 		{
 			this.mDrivers.Remove(this.mTeam.GetReserveDriver());
 		}
+
+		// check for paydrivers in team (if there is more than one this may not work properly)
+		Driver paydriver = null;
+		for (int i = 0; i < this.mDrivers.Count; i++) {
+			if (this.mDrivers[i].personalityTraitController.HasTrait(false, new int[] {165}))
+				paydriver = this.mDrivers[i];
+		}
+
 		for (int i = 0; i < this.mDrivers.Count; i++)
 		{
 			Driver lCurDriver = this.mDrivers[i];
