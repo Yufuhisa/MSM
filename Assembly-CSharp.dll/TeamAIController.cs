@@ -1406,7 +1406,7 @@ public class TeamAIController
 		this.mScoutableDrivers.Clear();
 	}
 
-	private Driver FindReplacementDriver(Driver current_driver, bool has_to_be_better, float better_delta = 0f)
+	private Driver FindReplacementDriver(Driver current_driver, int inSearchType)
 	{
 		long num = (long)((float)this.mTeam.financeController.finance.currentBudget * this.mTeam.aiWeightings.mFinanceDrivers);
 		Championship teamChampionship = this.mTeam.GetChampionshipEntry().championship;
@@ -1435,20 +1435,45 @@ public class TeamAIController
 				}
 			}
 		}
-		if (this.mScoutableDrivers.Count <= 1)
+		if (this.mTeam.championship.championshipID == 0) {
+			global::Debug.LogErrorFormat("FindReplacementDriver for Team {0} with searchtype {1} at time {3}: {2} drivers found", new object[] {
+				this.mTeam.GetShortName()
+			  , inSearchType
+			  , this.mScoutableDrivers.Count.ToString("##0")
+			  , Game.instance.time.now
+			});
+		}
+		if (this.mScoutableDrivers.Count < 1)
 		{
 			return null;
 		}
-		this.mScoutableDrivers.Sort((Driver x, Driver y) => y.GetStatsForAITeamComparison(this.mTeam).CompareTo(x.GetStatsForAITeamComparison(this.mTeam)));
-		if (!has_to_be_better)
-		{
-			return this.mScoutableDrivers[0];
+
+		this.mScoutableDrivers.Sort((Driver x, Driver y) => y.GetStatsForAITeamComparison(this.mTeam, inSearchType).CompareTo(x.GetStatsForAITeamComparison(this.mTeam, inSearchType)));
+		
+		int showDriveCount = 5;
+		if (this.mScoutableDrivers.Count < showDriveCount)
+			showDriveCount = this.mScoutableDrivers.Count;
+
+		if (this.mTeam.championship.championshipID != 0)
+			showDriveCount = 0;
+
+		if (this.mTeam.championship.championshipID == 0) {
+			for (int i = 0; i < showDriveCount; i++) {
+				Driver checkDriver = this.mScoutableDrivers[i];
+				global::Debug.LogErrorFormat("{0}. driver found was: {1} with {2} stars", new object[] {
+					this.mTeam.GetShortName()
+				  , checkDriver.shortName
+				  , (checkDriver.GetStatsForAITeamComparison(this.mTeam, inSearchType) * 5).ToString("0.0")
+				});
+			}
 		}
-		if (this.IsStarRatingThisMuchBetter(this.mScoutableDrivers[0], current_driver, better_delta))
-		{
-			return this.mScoutableDrivers[0];
-		}
-		return null;
+
+		return this.mScoutableDrivers[0];
+	}
+	
+	private Driver FindReplacementDriver(Driver current_driver)
+	{
+		return FindReplacementDriver(current_driver, 0);
 	}
 
 	private bool IsStarRatingThisMuchBetter(Driver compare_to, Driver driver, float better_delta)
@@ -2474,7 +2499,7 @@ public class TeamAIController
 			if (personHired3 is Driver)
 			{
 				Driver driver = personHired3 as Driver;
-				Driver driver2 = this.FindReplacementDriver(driver, false, 0f);
+				Driver driver2 = this.FindReplacementDriver(driver);
 				if (driver2 != null)
 				{
 					this.ReplaceDriver(driver, driver2, true, false);
@@ -2932,5 +2957,13 @@ public class TeamAIController
 		public bool has5ComponentSlots;
 
 		public bool isSpecPart;
+	}
+	
+	public enum DriverSearchType
+	{
+		Default,
+		TopTeam,
+		ReserveDriver,
+		PayDriver
 	}
 }
