@@ -88,7 +88,7 @@ public class TrackLayoutSpeedController : SpeedController
 				}
 				if (base.vehicle.steeringManager.slowSpeedSteeringBehaviour.isActive || base.vehicle.behaviourManager.currentBehaviour.behaviourType == AIBehaviourStateManager.Behaviour.BlueFlag)
 				{
-					num3 *= 1.3f;
+					num3 *= 1.05f;
 				}
 				num = EasingUtility.EaseByType(EasingUtility.Easing.OutExp, 0f, GameUtility.MilesPerHourToMetersPerSecond(num3), t);
 			}
