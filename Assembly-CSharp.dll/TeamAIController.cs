@@ -1631,6 +1631,10 @@ public class TeamAIController
 		if (inDriver.contract.IsContractedForNextSeason())
 			return false;
 
+		// non F1 Teams always try to renew
+		if (this.mTeam.championship.championshipID != 0)
+			return true;
+
 		int teamLastRank = this.mTeam.GetChampionshipRang();
 
 		float driverStars = inDriver.GetDriverStats().GetAbility();
