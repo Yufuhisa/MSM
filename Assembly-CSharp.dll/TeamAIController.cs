@@ -1239,6 +1239,50 @@ public class TeamAIController
 		this.HandleTeamPrincipalChanges();
 	}
 
+	private bool replaceDriver(Driver inDriver) {
+		// special rules for end of year in pre-season
+		// spread F1 changes over the last weeks
+		// all non-F1 make changes only at the last day
+		if (this.mTeam.championship.InPreseason() && Game.instance.time.now.Year == this.mTeam.championship.currentPreSeasonStartDate.Year)
+		{
+			// non F1 Teams dont act before last day of year, even for replacement drivers!
+			if (this.mTeam.championship.championshipID != 0 && Game.instance.time.now < (new DateTime(this.mTeam.championship.currentPreSeasonStartDate.Year, 12, 31)))
+				return false;
+			
+			// AI only replace/renew driver contracts with a growing chance (spreading driver changes over the last days of a year)
+			
+			DateTime newYearContractsLower = new DateTime(Game.instance.time.now.Year, 12, 30);
+			// days after preSeason
+			int curDayForNewContracts = Game.instance.time.now.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear + 1;
+			// preSeason days for new/renew driver contracts
+			int daysForNewContracts = newYearContractsLower.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear;
+			float chanceForContractCheck = (float)(1f / Math.Pow((float)daysForNewContracts, 2) * Math.Pow((float)curDayForNewContracts, 2));
+			//float chanceForContractCheck = 1f / (float)daysForNewContracts * (float)curDayForNewContracts;
+			if (chanceForContractCheck < RandomUtility.GetRandom01())
+				return false;
+
+			// check if contract needs to be renewed
+			if (!inDriver.contract.IsContractedForNextSeason()) {
+				// dont renew contract -> replace driver
+				if (!this.ShouldRenew(inDriver))
+					return true;
+				// renew contract -> dont replace driver
+				this.Renew(inDriver);
+				return false;
+			}
+		}
+
+		// allways replace replacments drivers Mid-Season
+		if (inDriver.IsReplacementPerson())
+			return true;
+
+		// wants to fire driver (at random?)
+		if (this.ShouldFire(inDriver))
+			return true;
+		
+		return false;
+	}
+	
 	public void HandleDriverChanges()
 	{
 		this.mDrivers.Clear();
