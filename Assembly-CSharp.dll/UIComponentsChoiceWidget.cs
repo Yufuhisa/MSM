@@ -12,7 +12,7 @@ public class UIComponentsChoiceWidget : MonoBehaviour
 	{
 		PartDesignScreen screen = UIManager.instance.GetScreen<PartDesignScreen>();
 		this.mDesign = Game.instance.player.team.carManager.carPartDesign;
-		this.engineerComponentsWidget.Setup();
+		this.engineerComponentsWidget.Setup(screen.partType);
 		for (int i = 0; i < this.componentsWidget.Length; i++)
 		{
 			this.componentsWidget[i].Setup();
