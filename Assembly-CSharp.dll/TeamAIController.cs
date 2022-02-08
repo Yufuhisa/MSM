@@ -1639,7 +1639,8 @@ public class TeamAIController
 
 		float driverStars = inDriver.GetDriverStats().GetAbility();
 		float driverPotentialStars = inDriver.GetDriverStats().GetAbilityPotential();
-		bool driverIsInteressted = (inDriver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk);
+		Person.InterestedToTalkResponseType driverResponse = inDriver.GetInterestedToTalkReaction(this.mTeam);
+		bool driverIsInteressted = (driverResponse == Person.InterestedToTalkResponseType.InterestedToTalk);
 
 		if (inDriver.IsReserveDriver())
 		{
