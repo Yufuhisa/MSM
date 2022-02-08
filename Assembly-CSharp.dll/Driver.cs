@@ -1191,6 +1191,7 @@ public class Driver : Person
 	{
 		// morale check
 		if (this.GetMorale() < 0.4f) {
+			int teamLastRank = inTeam.GetChampionshipRang();
 			// if team is not top 3 -> 65% do not renew
 			if (teamLastRank > 3 && RandomUtility.GetRandom01() < 0.65f) {
 				return true;
