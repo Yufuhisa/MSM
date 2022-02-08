@@ -1303,53 +1303,18 @@ public class TeamAIController
 		for (int i = 0; i < this.mDrivers.Count; i++)
 		{
 			Driver lCurDriver = this.mDrivers[i];
+			// ???
 			TeamAIController.NegotiationEntry negotiationEntry = this.mNegotiations.Find((TeamAIController.NegotiationEntry x) => (x.mPersonToFire != null && x.mPersonToFire.personHired == lCurDriver) || x.mPerson == lCurDriver);
-			bool flag = lCurDriver.IsReplacementPerson();
-			bool flag2 = flag || (Game.instance.time.now - lCurDriver.contract.startDate).Days > TeamAIController.hireStaffCooldownDays;
-			bool flag3 = false;
-			bool flag4 = false;
 
-			DateTime newYearContractsLower = new DateTime(Game.instance.time.now.Year, 12, 30);
-			// days after preSeason
-			int curDayForNewContracts = Game.instance.time.now.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear + 1;
-			// preSeason days for new/renew driver contracts
-			int daysForNewContracts = newYearContractsLower.DayOfYear - this.mTeam.championship.currentPreSeasonStartDate.DayOfYear;
-			
-			if (negotiationEntry == null && flag2)
-			{
-				bool flag5 = false;
-				// fire?
-				if (flag || this.ShouldFire(lCurDriver))
+			bool driverRecentlyHired = (
+				!lCurDriver.IsReplacementPerson()
+				&& ((Game.instance.time.now - lCurDriver.contract.startDate).Days <= TeamAIController.hireStaffCooldownDays)
+			);
+
+			if (negotiationEntry == null && !driverRecentlyHired) {
+				// check if driver is to be replaced (also may renew contract if nessessary)
+				if (this.replaceDriver(lCurDriver))
 				{
-					flag5 = true;
-					flag3 = !flag;
-				}
-				// driver leaves? (always false)
-				else if (lCurDriver.WantsToLeave() || lCurDriver.IsOpenToOffers())
-				{
-					if (this.AllowToLeave(lCurDriver))
-					{
-						flag5 = true;
-						flag4 = true;
-					}
-				}
-				// year end driver movements/renew
-				// F1: by chance, starting with preSeason, 100% at 29.12.
-				// Other Championships: All on 30.12.
-				else if (this.mTeam.championship.InPreseason() && !lCurDriver.contract.IsContractedForNextSeason())
-				{
-					if ((Game.instance.time.now.DayOfYear >= newYearContractsLower.DayOfYear)
-					 || (this.mTeam.championship.championshipID == 0 && (1f / (float)daysForNewContracts * (float)curDayForNewContracts > RandomUtility.GetRandom01()))
-					)
-					{
-						if (this.ShouldRenew(lCurDriver))
-						{
-							this.Renew(lCurDriver);
-						}
-						else
-						{
-							flag5 = true;
-						}
 					int searchType = 0;
 					if (this.mTeam.championship.championshipID == 0) {
 						// search pattern for reserve driver
@@ -1365,45 +1330,45 @@ public class TeamAIController
 							searchType = 3;
 							//searchType = TeamAIController.DriverSearchType.PayDriver;
 					}
-				}
-				if (flag5)
-				{
-					bool inReplaceWithReserve = false;
-					Driver driver = this.FindReplacementDriver(lCurDriver, flag4, 0.75f);
-					if (reserveDriver != null)
-					{
-						bool flag6 = (Game.instance.time.now - reserveDriver.contract.startDate).Days > TeamAIController.hireStaffCooldownDays;
-						bool flag7 = driver == null || reserveDriver.GetStatsForAITeamComparison(this.mTeam) > driver.GetStatsForAITeamComparison(this.mTeam);
-						if (lCurDriver.IsMainDriver() && !reserveDriver.IsReplacementPerson() && flag6 && flag7 && !reserveDriver.contractManager.isNegotiating && reserveDriver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk)
-						{
-							if (!flag4 || this.IsStarRatingThisMuchBetter(reserveDriver, lCurDriver, 0.75f))
-							{
-								inReplaceWithReserve = true;
-								driver = reserveDriver;
-							}
-							else
-							{
-								driver = null;
+
 					Driver newDriver = this.FindReplacementDriver(lCurDriver, searchType);
+
+					bool replaceWithReserve = false;
+
+					// if main driver is to be replaced, compare with testdriver -> testdriver may be new main driver, and replacementdriver will become testdriver
+					if (lCurDriver.IsMainDriver()) {
+
+						// get testdriver information
+						Driver reserveDriver = this.mTeam.GetReserveDriver();
+						bool testDriverReadyForMainDriverJob = (
+						     reserveDriver != null
+						  && !reserveDriver.IsReplacementPerson()
+						  && (Game.instance.time.now - reserveDriver.contract.startDate).Days > TeamAIController.hireStaffCooldownDays
+						  && !reserveDriver.contractManager.isNegotiating
+						  && reserveDriver.GetInterestedToTalkReaction(this.mTeam) == Person.InterestedToTalkResponseType.InterestedToTalk
+						);
+
+						if (newDriver != null && testDriverReadyForMainDriverJob) {
+							// compare testdriver vs new driver
+							float compareStarRationAsMainDriver = reserveDriver.GetStatsForAITeamComparison(this.mTeam, searchType) - newDriver.GetStatsForAITeamComparison(this.mTeam, searchType);
+
+							if (compareStarRationAsMainDriver > 0.33f) {
+								// testdriver is at least a thrid star better than the new driver -> promote testdriver to maindriver instead of hirering the new driver
+								replaceWithReserve = true;
+								newDriver = reserveDriver;
 							}
+
 						}
 					}
-					if (driver != null)
-					{
-						this.ReplaceDriver(lCurDriver, driver, flag, inReplaceWithReserve);
-						if (flag3)
-						{
-							this.mLastFiringUpdateTime = Game.instance.time.now;
-							this.mChanceOfFiring = 0f;
-						}
-					}
-					else if (flag4)
-					{
-					}
+
+					this.ReplaceDriver(lCurDriver, newDriver, lCurDriver.IsReplacementPerson(), replaceWithReserve);
+
+					// remember if new driver is paydriver
+					if (newDriver.personalityTraitController.HasTrait(false, new int[] {165}))
+						paydriver = newDriver;
 				}
 			}
 		}
-		this.mScoutableDrivers.Clear();
 	}
 
 	private Driver FindReplacementDriver(Driver current_driver, int inSearchType)
