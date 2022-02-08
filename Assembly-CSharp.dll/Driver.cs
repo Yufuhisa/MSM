@@ -1152,7 +1152,12 @@ public class Driver : Person
 
 	public override bool IsOpenToOffers()
 	{
-		return (Game.instance.time.now - this.lowMoraleStartTime).Days <= this.lowMoraleOpenToOffersDays;
+		bool lowMorale = ((Game.instance.time.now - this.lowMoraleStartTime).Days <= this.lowMoraleOpenToOffersDays);
+		bool inPreSeason = (this.contract.GetTeam() != null && this.contract.GetTeam().championship.InPreseason());
+		// Contract running in next pre season
+		bool contractRunningOut = !this.contract.IsContractedForNextSeason() && (Game.instance.time.now.Year < this.contract.GetTeam().championship.currentPreSeasonEndDate.Year);
+		
+		return lowMorale || (inPreSeason && contractRunningOut);
 	}
 
 	public override bool WantsToRetire()
