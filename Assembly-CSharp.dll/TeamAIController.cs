@@ -401,23 +401,41 @@ public class TeamAIController
 
 	public void HandleCarUpgrades()
 	{
+		bool debugLog = (true && this.mTeam.championship.championshipID == 0);
+		if (debugLog)
+			global::Debug.LogErrorFormat("HandleCarUpgrades for Team {0} at time {1}", new object[] { this.mTeam.GetShortName(), Game.instance.time.now });
+
+		// check if enough time elapsed since last upgrade
 		float unitAverage = this.mTeam.teamPrincipal.stats.GetUnitAverage();
-		int num = (int)((1f - unitAverage) * 7f) + RandomUtility.GetRandom(0, 3);
-		if (App.instance.preferencesManager.gamePreferences.GetAIDevDifficulty() == PrefGameAIDevDifficulty.Type.Slowed)
-		{
-		}
+		int minDays = (int)((1f - unitAverage) * 7f) + RandomUtility.GetRandom(0, 3);
 		CarManager carManager = this.mTeam.carManager;
-		if ((Game.instance.time.now - this.mLastCarUpdateTime).Days < num)
+		if ((Game.instance.time.now - this.mLastCarUpdateTime).Days < minDays)
 		{
+			if (debugLog)
+				global::Debug.LogErrorFormat("Time since last update ({0}) is less than min days ({1}) between updates", new object[] { this.mLastCarUpdateTime, minDays });
 			this.ImproveCarParts(carManager);
 			return;
 		}
-		long num2 = (long)((float)this.mTeam.financeController.finance.currentBudget * this.mTeam.aiWeightings.mFinanceCar);
-		if (num2 <= 0L)
-		{
+
+		// check if part design is idle (not already working at new parts)
+		if (carManager.carPartDesign.stage != CarPartDesign.Stage.Idle) {
+			if (debugLog)
+				global::Debug.LogErrorFormat("Already working on new parts");
 			this.ImproveCarParts(carManager);
 			return;
 		}
+
+		// check money
+		long moneyForCars = (long)((float)this.mTeam.financeController.finance.currentBudget * this.mTeam.aiWeightings.mFinanceCar);
+		if (moneyForCars <= 0L)
+		{
+			if (debugLog)
+				global::Debug.LogErrorFormat("Not enough weighted ({1}) money for car upgrades: {0}", new object[] { moneyForCars, this.mTeam.aiWeightings.mFinanceCar });
+			this.ImproveCarParts(carManager);
+			return;
+		}
+
+		// gather current information about all car stats
 		TeamAIWeightings aiWeightings = this.mTeam.aiWeightings;
 		Dictionary<CarStats.StatType, TeamAIController.CarUpgradeStatValues> dictionary = new Dictionary<CarStats.StatType, TeamAIController.CarUpgradeStatValues>();
 		List<CarPart.PartType> list = new List<CarPart.PartType>(CarPart.GetPartType(this.mTeam.championship.series, false));
@@ -442,7 +460,8 @@ public class TeamAIController
 				dictionary.Add(statType, carUpgradeStatValues);
 			}
 		}
-		CarStats.StatType statType2 = CarStats.StatType.Count;
+		
+		// create list of parts that need to be upgraded (50 points below best part in grid(league?))
 		float num4 = -50f;
 		List<CarPart.PartType> list2 = new List<CarPart.PartType>();
 		for (CarStats.StatType statType3 = CarStats.StatType.TopSpeed; statType3 < CarStats.StatType.Count; statType3++)
@@ -452,12 +471,18 @@ public class TeamAIController
 				TeamAIController.CarUpgradeStatValues carUpgradeStatValues2 = dictionary[statType3];
 				if (carUpgradeStatValues2.difference < num4 && !carUpgradeStatValues2.isSpecPart && !carUpgradeStatValues2.gotTwoPartsOfBestPossibleLevel)
 				{
-					statType2 = statType3;
 					num4 = carUpgradeStatValues2.difference;
 					list2.Add(carUpgradeStatValues2.partType);
 				}
 			}
 		}
+		if (debugLog) {
+			global::Debug.LogErrorFormat("Found {0} part types with main stats less than 50 points below best in grid:", new object[] { list2.Count });
+			for (int i = 0; i < list2.Count; i++)
+				global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
+		}
+
+		// if non found, search for upgradeable PartTypes
 		if (list2.Count == 0)
 		{
 			num4 = 0f;
@@ -468,83 +493,104 @@ public class TeamAIController
 					TeamAIController.CarUpgradeStatValues carUpgradeStatValues3 = dictionary[statType4];
 					if (!carUpgradeStatValues3.isSpecPart && ((carUpgradeStatValues3.nPartsOfbestPossibleLevel < 3 && !carUpgradeStatValues3.has5ComponentSlots) || !carUpgradeStatValues3.gotTwoPartsOfBestPossibleLevel) && carUpgradeStatValues3.difference < num4)
 					{
-						statType2 = statType4;
 						num4 = carUpgradeStatValues3.difference;
 						list2.Add(carUpgradeStatValues3.partType);
 					}
 				}
 			}
-		}
-		float num5 = (float)((aiWeightings.mAggressiveness < 0.8f) ? ((aiWeightings.mAggressiveness <= 0.4f) ? 0 : RandomUtility.GetRandom(1, 2)) : RandomUtility.GetRandom(2, 4));
-		bool isBanned = carManager.partInventory.GetMostRecentParts(1, CarPart.PartType.None)[0].isBanned;
-		if (list2.Count > 0 && carManager.carPartDesign.stage == CarPartDesign.Stage.Idle)
-		{
-			CarPart.PartType partType = CarPart.GetPartForStatType(statType2, this.mTeam.championship.series);
-			List<CarPart> highestLevelPartsOfType2 = carManager.partInventory.GetHighestLevelPartsOfType(partType, true);
-			highestLevelPartsOfType2.Sort((CarPart x, CarPart y) => y.stats.statWithPerformance.CompareTo(x.stats.statWithPerformance));
-			if (statType2 == CarStats.StatType.Count || (carManager.carPartDesign.lastCarPart != null && carManager.carPartDesign.lastCarPart.GetPartType() == partType))
-			{
-				partType = list2[RandomUtility.GetRandom(0, list2.Count)];
-				highestLevelPartsOfType2 = carManager.partInventory.GetHighestLevelPartsOfType(partType, true);
-				highestLevelPartsOfType2.Sort((CarPart x, CarPart y) => y.stats.statWithPerformance.CompareTo(x.stats.statWithPerformance));
+			if (debugLog) {
+				global::Debug.LogErrorFormat("Alternative search: Found {0} part types which are upgradeable:", new object[] { list2.Count });
+				for (int i = 0; i < list2.Count; i++)
+					global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
 			}
-			CarPartDesign carPartDesign = carManager.carPartDesign;
-			carPartDesign.InitializeNewPart(partType);
-			CarPart part = carPartDesign.part;
-			Dictionary<int, List<CarPartComponent>> componentsForPartType = carPartDesign.GetComponentsForPartType(partType);
-			for (int i = componentsForPartType.Keys.Count - 1; i >= 0; i--)
+		}
+		
+		// stop if no upgradeable parts found
+		if (list2.Count == 0) {
+			if (debugLog)
+				global::Debug.LogErrorFormat("Found no upgradeable parts");
+			this.mLastCarUpdateTime = Game.instance.time.now;
+			this.ImproveCarParts(carManager);
+			return;
+		}
+		
+		// develop last upgradable part type (also see order of CarPart.PartType)
+		CarPart.PartType partType = list2[list2.Count-1];
+		// if partType was already last developed part type, select at random
+		if (carManager.carPartDesign.lastCarPart != null && carManager.carPartDesign.lastCarPart.GetPartType() == partType) {
+			partType = list2[RandomUtility.GetRandom(0, list2.Count)];
+		}
+
+		// get max risk level depending on aggressiveness (<=.4 -> 0; >.4-.8 -> 1; else 2-3)
+		float maxRiskLevel = (float)((aiWeightings.mAggressiveness < 0.8f) ? ((aiWeightings.mAggressiveness <= 0.4f) ? 0 : 1) : RandomUtility.GetRandom(2, 4));
+		bool isBanned = carManager.partInventory.GetMostRecentParts(1, CarPart.PartType.None)[0].isBanned;
+
+		if (debugLog)
+			global::Debug.LogErrorFormat("Start Design for PartType {0} with maxRiskLevel {1}", new object[] { partType, maxRiskLevel });
+
+		// initialise Design
+		CarPartDesign carPartDesign = carManager.carPartDesign;
+		carPartDesign.InitializeNewPart(partType);
+		CarPart part = carPartDesign.part;
+		Dictionary<int, List<CarPartComponent>> componentsForPartType = carPartDesign.GetComponentsForPartType(partType);
+
+		// loop over component tiers (starting with highest tier)
+		for (int i = componentsForPartType.Keys.Count - 1; i >= 0; i--)
+		{
+			if (carPartDesign.HasSlotForLevel(i + 1))
 			{
-				if (carPartDesign.HasSlotForLevel(i + 1))
+				List<CarPartComponent> list3 = componentsForPartType[i];
+				if (this.mTeam.aiWeightings.mAggressiveness > 0.5f)
 				{
-					List<CarPartComponent> list3 = componentsForPartType[i];
-					if (this.mTeam.aiWeightings.mAggressiveness > 0.5f)
+					TeamAIController.SortPartComponentsForAgressiveTeams(list3);
+				}
+				else
+				{
+					TeamAIController.SortPartComponentsForNonAgressiveTeams(list3);
+				}
+				PartTypeSlotSettings partTypeSlotSettings2 = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][partType];
+				if (partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
+				{
+					for (int j = 0; j < list3.Count; j++)
 					{
-						TeamAIController.SortPartComponentsForAgressiveTeams(list3);
-					}
-					else
-					{
-						TeamAIController.SortPartComponentsForNonAgressiveTeams(list3);
-					}
-					PartTypeSlotSettings partTypeSlotSettings2 = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][partType];
-					if (partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
-					{
-						for (int j = 0; j < list3.Count; j++)
+						CarPartComponent carPartComponent = list3[j];
+						if (carPartComponent.IsUnlocked(this.mTeam))
 						{
-							CarPartComponent carPartComponent = list3[j];
-							if (carPartComponent.IsUnlocked(this.mTeam))
+							if (!carPartDesign.HasSlotForLevel(carPartComponent.level))
 							{
-								if (!carPartDesign.HasSlotForLevel(carPartComponent.level))
-								{
-									break;
-								}
-								if ((!isBanned && num5 >= carPartComponent.riskLevel) || carPartComponent.riskLevel == 0f || (i == 0 && j == list3.Count - 1))
-								{
-									carPartDesign.AddComponent(part, carPartComponent);
-									num5 -= carPartComponent.riskLevel;
-								}
-								if (!part.hasComponentSlotsAvailable)
-								{
-									break;
-								}
+								break;
+							}
+							if ((!isBanned && maxRiskLevel >= carPartComponent.riskLevel) || carPartComponent.riskLevel == 0f || (i == 0 && j == list3.Count - 1))
+							{
+								if (debugLog)
+									global::Debug.LogErrorFormat("Add Component with Level {0} with maxRiskLevel {1} and ID {2}", new object[] { i+1, carPartComponent.riskLevel, carPartComponent.id });
+								carPartDesign.AddComponent(part, carPartComponent);
+								maxRiskLevel -= carPartComponent.riskLevel;
+							}
+							if (!part.hasComponentSlotsAvailable)
+							{
+								break;
 							}
 						}
-						if (!part.hasComponentSlotsAvailable)
-						{
-							break;
-						}
+					}
+					if (!part.hasComponentSlotsAvailable)
+					{
+						break;
 					}
 				}
 			}
-			if ((long)carManager.carPartDesign.GetDesignCost() < num2)
-			{
-				Transaction transaction = new Transaction(Transaction.Group.CarParts, Transaction.Type.Debit, carManager.carPartDesign.GetDesignCost(), carManager.carPartDesign.part.GetPartName());
-				this.mTeam.financeController.finance.ProcessTransactions(null, null, false, new Transaction[]
-				{
-					transaction
-				});
-				carManager.carPartDesign.StartDesigning();
-			}
 		}
+
+		if ((long)carManager.carPartDesign.GetDesignCost() < moneyForCars)
+		{
+			Transaction transaction = new Transaction(Transaction.Group.CarParts, Transaction.Type.Debit, carManager.carPartDesign.GetDesignCost(), carManager.carPartDesign.part.GetPartName());
+			this.mTeam.financeController.finance.ProcessTransactions(null, null, false, new Transaction[]
+			{
+				transaction
+			});
+			carManager.carPartDesign.StartDesigning();
+		}
+
 		this.mLastCarUpdateTime = Game.instance.time.now;
 		this.ImproveCarParts(carManager);
 	}
