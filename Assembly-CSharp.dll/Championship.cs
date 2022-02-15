@@ -561,6 +561,7 @@ public class Championship : Entity
 
 	private void HandleChampionshipPromotions()
 	{
+		return; // no promotions
 		if (this.championshipAboveID != -1)
 		{
 			if (this.mChampionshipPromotions.champion.IsPlayersTeam())

@@ -150,7 +150,7 @@ public class ChampionshipManager : GenericManager<Championship>
 	private void SetChampionshipOrder(ref List<Championship> inList, Championship.Series inSeries)
 	{
 		inList = new List<Championship>(base.GetEntityList());
-		inList.RemoveAll((Championship x) => !x.isChoosable || x.series != inSeries || !x.allowPromotions);
+		inList.RemoveAll((Championship x) => !x.isChoosable || x.series != inSeries);
 		inList.Sort((Championship x, Championship y) => x.championshipOrderRelative.CompareTo(y.championshipOrderRelative));
 		for (int i = 0; i < inList.Count; i++)
 		{
