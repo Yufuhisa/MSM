@@ -275,17 +275,24 @@ public class Championship : Entity
 					global::Debug.Assert(stat >= 0f && stat <= 1f, "Stat used for part adaptation is not normalized ");
 					if (this.inRelegatedTeamFromHigherTier != null && inTeam == this.inRelegatedTeamFromHigherTier.team)
 					{
+						// Relegated to lower tier
+						int bestTeamNum = 0;
+						int lowerTeamNum = 2;
+						if (teamStandingsOnStat.Count - 1 < lowerTeamNum) // when less than 3 teams remaining
+							lowerTeamNum = teamStandingsOnStat.Count - 1;
+						float lowerTeamStats = teamStandingsOnStat[lowerTeamNum].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
+						float bestTeamStats = teamStandingsOnStat[bestTeamNum].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
 						float num = GameStatsConstants.relegatedTeamSpreadScaler;
-						float statWithPerformance = teamStandingsOnStat[2].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
-						float statWithPerformance2 = teamStandingsOnStat[0].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
-						float num2 = statWithPerformance2 - statWithPerformance;
-						inPreviousChampRankings.SetStat(statType, statWithPerformance + num * num2 * stat);
+						float num2 = bestTeamStats - lowerTeamStats;
+						inPreviousChampRankings.SetStat(statType, lowerTeamStats + num * num2 * stat);
 					}
 					else
 					{
+						// Promoted to higher tier
+						int bottomTeamNum = teamStandingsOnStat.Count - 1;
 						float num = GameStatsConstants.promotedTeamSpreadScaler;
-						float statWithPerformance3 = teamStandingsOnStat[teamStandingsOnStat.Count - 2].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
-						float num3 = statWithPerformance3 - (float)this.rules.partStatSeasonMinValue[partForStatType];
+						float bottomTeamStats = teamStandingsOnStat[bottomTeamNum].carManager.partInventory.GetHighestStatPartOfType(partForStatType).stats.statWithPerformance;
+						float num3 = bottomTeamStats - (float)this.rules.partStatSeasonMinValue[partForStatType];
 						inPreviousChampRankings.SetStat(statType, (float)this.rules.partStatSeasonMinValue[partForStatType] + num * num3 * stat);
 					}
 				}
