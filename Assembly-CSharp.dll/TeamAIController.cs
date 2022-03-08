@@ -401,7 +401,15 @@ public class TeamAIController
 
 	public void HandleCarUpgrades()
 	{
-		bool debugLog = (true && this.mTeam.championship.championshipID == 0);
+		bool logDebug = true;
+		bool logInfo1 = true;
+		bool logInfo2 = true;
+		bool logInfo3 = true;
+		bool debugLog = (logDebug && this.mTeam.championship.championshipID == 0);
+		bool infoLog1 = (logInfo1 && logDebug && this.mTeam.championship.championshipID == 0);
+		bool infoLog2 = (logInfo2 && logDebug && this.mTeam.championship.championshipID == 0);
+		bool infoLog3 = (logInfo3 && logDebug && this.mTeam.championship.championshipID == 0);
+
 		if (debugLog)
 			global::Debug.LogErrorFormat("HandleCarUpgrades for Team {0} at time {1}", new object[] { this.mTeam.GetShortName(), Game.instance.time.now });
 
@@ -411,7 +419,7 @@ public class TeamAIController
 		CarManager carManager = this.mTeam.carManager;
 		if ((Game.instance.time.now - this.mLastCarUpdateTime).Days < minDays)
 		{
-			if (debugLog)
+			if (infoLog1)
 				global::Debug.LogErrorFormat("Time since last update ({0}) is less than min days ({1}) between updates", new object[] { this.mLastCarUpdateTime, minDays });
 			this.ImproveCarParts(carManager);
 			return;
@@ -419,7 +427,7 @@ public class TeamAIController
 
 		// check if part design is idle (not already working at new parts)
 		if (carManager.carPartDesign.stage != CarPartDesign.Stage.Idle) {
-			if (debugLog)
+			if (infoLog1)
 				global::Debug.LogErrorFormat("Already working on new parts");
 			this.ImproveCarParts(carManager);
 			return;
@@ -429,7 +437,7 @@ public class TeamAIController
 		long moneyForCars = (long)((float)this.mTeam.financeController.finance.currentBudget * this.mTeam.aiWeightings.mFinanceCar);
 		if (moneyForCars <= 0L)
 		{
-			if (debugLog)
+			if (infoLog1)
 				global::Debug.LogErrorFormat("Not enough weighted ({1}) money for car upgrades: {0}", new object[] { moneyForCars, this.mTeam.aiWeightings.mFinanceCar });
 			this.ImproveCarParts(carManager);
 			return;
@@ -476,7 +484,7 @@ public class TeamAIController
 				}
 			}
 		}
-		if (debugLog) {
+		if (infoLog2) {
 			global::Debug.LogErrorFormat("Found {0} part types with main stats less than 50 points below best in grid:", new object[] { list2.Count });
 			for (int i = 0; i < list2.Count; i++)
 				global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
@@ -498,7 +506,7 @@ public class TeamAIController
 					}
 				}
 			}
-			if (debugLog) {
+			if (infoLog2) {
 				global::Debug.LogErrorFormat("Alternative search: Found {0} part types which are upgradeable:", new object[] { list2.Count });
 				for (int i = 0; i < list2.Count; i++)
 					global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
@@ -507,7 +515,7 @@ public class TeamAIController
 		
 		// stop if no upgradeable parts found
 		if (list2.Count == 0) {
-			if (debugLog)
+			if (infoLog2)
 				global::Debug.LogErrorFormat("Found no upgradeable parts");
 			this.mLastCarUpdateTime = Game.instance.time.now;
 			this.ImproveCarParts(carManager);
@@ -546,6 +554,14 @@ public class TeamAIController
 		for (int i = componentsForPartType.Keys.Count - 1; i >= 0; i--)
 		{
 
+			if (infoLog3)
+				global::Debug.LogErrorFormat("Check Level {0} with current Reliability {1}; hasSlotForLevel = {2}; isUnlocked = {3}", new object[] {
+					i + 1
+					, part.stats.GetMaxReliability()
+					, carPartDesign.HasSlotForLevel(i + 1)
+					, partTypeSlotSettings2.IsUnlocked(this.mTeam, i)
+				});
+
 			// check if ComponentLevel is available in Part and for Team
 			if (!carPartDesign.HasSlotForLevel(i + 1) || !partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
 				continue;
@@ -572,6 +588,19 @@ public class TeamAIController
 						TeamAIController.SortPartComponentsForNonAgressiveTeams(componentList);
 				}
 				
+				if (infoLog3) {
+					global::Debug.LogErrorFormat("Partlist (sorted):");
+					for (int l = 0; l < componentList.Count; l++)
+						global::Debug.LogErrorFormat("Part {0}: ID {1} RiskLvl {2} maxReliabilityBoost {3} aggrWeightings {4} nonAggrWeightings {5}", new object[] {
+							l + 1
+							, componentList[l].id
+							, componentList[l].riskLevel
+							, componentList[l].maxReliabilityBoost
+							, componentList[l].agressiveTeamWeightings
+							, componentList[l].nonAgressiveTeamWeightings
+						});
+				}
+
 					for (int j = 0; j < componentList.Count; j++)
 					{
 						CarPartComponent carPartComponent = componentList[j];
