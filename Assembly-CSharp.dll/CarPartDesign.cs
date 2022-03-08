@@ -237,7 +237,8 @@ public class CarPartDesign
 		{
 			num++;
 		}
-		num = Mathf.Clamp(num, 1, GameStatsConstants.slotCount);
+		int minSlot = 2; // start with 2 slots, instead of 1 as base game
+		num = Mathf.Clamp(num, minSlot, GameStatsConstants.slotCount);
 		if (this.mAllPartsUnlocked)
 		{
 			num = GameStatsConstants.slotCount;
