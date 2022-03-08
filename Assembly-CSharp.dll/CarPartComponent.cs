@@ -231,6 +231,22 @@ public class CarPartComponent : fsISerializationCallbacks
 		}
 	}
 
+	public float nonAgressiveReliabilityTeamWeightings
+	{
+		get
+		{
+			return this.maxReliabilityBoost * 100 + this.nonAgressiveTeamWeightings;
+		}
+	}
+
+	public float agressiveReliabilityTeamWeightings
+	{
+		get
+		{
+			return this.maxReliabilityBoost * 100 + this.agressiveTeamWeightings;
+		}
+	}
+
 	public List<CarPart.PartType> partsAvailableTo = new List<CarPart.PartType>();
 
 	public List<CarPartUnlockRequirement> unlockRequirements = new List<CarPartUnlockRequirement>();

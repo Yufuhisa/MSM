@@ -524,43 +524,69 @@ public class TeamAIController
 		// get max risk level depending on aggressiveness (<=.4 -> 0; >.4-.8 -> 1; else 2-3)
 		float maxRiskLevel = (float)((mTeam.customAggressiveness < 0.8f) ? ((mTeam.customAggressiveness <= 0.4f) ? 0 : 1) : RandomUtility.GetRandom(2, 4));
 		bool isBanned = carManager.partInventory.GetMostRecentParts(1, CarPart.PartType.None)[0].isBanned;
+		float targetMaxReliability = GameStatsConstants.absolutMaxReliability - (this.mTeam.customAggressiveness * 0.4f);
 
 		if (debugLog)
-			global::Debug.LogErrorFormat("Start Design for PartType {0} with maxRiskLevel {1}", new object[] { partType, maxRiskLevel });
+			global::Debug.LogErrorFormat("Start Design for PartType {0} with maxRiskLevel {1}, targetMaxReliability {2} and TeamAggressiveness {3}", new object[] {
+				partType
+				, maxRiskLevel
+				, targetMaxReliability
+				, this.mTeam.customAggressiveness
+			});
 
 		// initialise Design
 		CarPartDesign carPartDesign = carManager.carPartDesign;
 		carPartDesign.InitializeNewPart(partType);
 		CarPart part = carPartDesign.part;
 		Dictionary<int, List<CarPartComponent>> componentsForPartType = carPartDesign.GetComponentsForPartType(partType);
+		Engineer engineer = (Engineer)mTeam.contractManager.GetPersonOnJob(Contract.Job.EngineerLead);
+		PartTypeSlotSettings partTypeSlotSettings2 = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][partType];
 
 		// loop over component tiers (starting with highest tier)
 		for (int i = componentsForPartType.Keys.Count - 1; i >= 0; i--)
 		{
-			if (carPartDesign.HasSlotForLevel(i + 1))
-			{
-				List<CarPartComponent> list3 = componentsForPartType[i];
-				if (this.mTeam.aiWeightings.mAggressiveness > 0.5f)
+
+			// check if ComponentLevel is available in Part and for Team
+			if (!carPartDesign.HasSlotForLevel(i + 1) || !partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
+				continue;
+
+				List<CarPartComponent> componentList = componentsForPartType[i];
+
+				// add engineer component, if available and if team aggressiveness is high enough (aggressiveness = 0 is player only)
+				CarPartComponent engineerComponent = engineer.GetComponentForLevel(i);
+				if (engineerComponent != null && engineerComponent.IsAvailableForType(partType) && engineerComponent.agressiveTeamWeightings > 0)
+					componentList.Add(engineerComponent);
+
+				if (this.mTeam.customAggressiveness > 0.5f)
 				{
-					TeamAIController.SortPartComponentsForAgressiveTeams(list3);
+					if (part.stats.GetMaxReliability() < targetMaxReliability)
+						TeamAIController.SortPartComponentsForMaxReliabilityAgressive(componentList);
+					else
+						TeamAIController.SortPartComponentsForAgressiveTeams(componentList);
 				}
 				else
 				{
-					TeamAIController.SortPartComponentsForNonAgressiveTeams(list3);
+					if (part.stats.GetMaxReliability() < targetMaxReliability)
+						TeamAIController.SortPartComponentsForMaxReliabilityNonAgressive(componentList);
+					else
+						TeamAIController.SortPartComponentsForNonAgressiveTeams(componentList);
 				}
-				PartTypeSlotSettings partTypeSlotSettings2 = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][partType];
-				if (partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
-				{
-					for (int j = 0; j < list3.Count; j++)
+				
+					for (int j = 0; j < componentList.Count; j++)
 					{
-						CarPartComponent carPartComponent = list3[j];
+						CarPartComponent carPartComponent = componentList[j];
 						if (carPartComponent.IsUnlocked(this.mTeam))
 						{
 							if (!carPartDesign.HasSlotForLevel(carPartComponent.level))
 							{
 								break;
 							}
-							if ((!isBanned && maxRiskLevel >= carPartComponent.riskLevel) || carPartComponent.riskLevel == 0f || (i == 0 && j == list3.Count - 1))
+							
+							bool riskLevelToHigh = (carPartComponent.riskLevel != 0f && (!isBanned || maxRiskLevel >= carPartComponent.riskLevel));
+							bool lastComponent = (i == 0 && j == componentList.Count - 1);
+							bool targetMaxReliabilityReached = (carPartComponent.maxReliabilityBoost >= 0f || (part.stats.GetMaxReliability() + carPartComponent.maxReliabilityBoost) >= targetMaxReliability);
+							
+							if (targetMaxReliabilityReached && (!riskLevelToHigh || lastComponent))
 							{
 								if (debugLog)
 									global::Debug.LogErrorFormat("Add Component with Level {0} with maxRiskLevel {1} and ID {2}", new object[] { i+1, carPartComponent.riskLevel, carPartComponent.id });
@@ -577,8 +603,6 @@ public class TeamAIController
 					{
 						break;
 					}
-				}
-			}
 		}
 
 		if ((long)carManager.carPartDesign.GetDesignCost() < moneyForCars)
@@ -690,6 +714,16 @@ public class TeamAIController
 	private static void SortPartComponentsForAgressiveTeams(List<CarPartComponent> lPartsForLevel)
 	{
 		lPartsForLevel.Sort((CarPartComponent componentA, CarPartComponent componentB) => componentB.agressiveTeamWeightings.CompareTo(componentA.agressiveTeamWeightings));
+	}
+
+	private static void SortPartComponentsForMaxReliabilityNonAgressive(List<CarPartComponent> lPartsForLevel)
+	{
+		lPartsForLevel.Sort((CarPartComponent componentA, CarPartComponent componentB) => componentB.nonAgressiveReliabilityTeamWeightings.CompareTo(componentA.nonAgressiveReliabilityTeamWeightings));
+	}
+
+	private static void SortPartComponentsForMaxReliabilityAgressive(List<CarPartComponent> lPartsForLevel)
+	{
+		lPartsForLevel.Sort((CarPartComponent componentA, CarPartComponent componentB) => componentB.agressiveReliabilityTeamWeightings.CompareTo(componentA.agressiveReliabilityTeamWeightings));
 	}
 
 	public void FitPartsOnCars()
