@@ -522,7 +522,7 @@ public class TeamAIController
 		}
 
 		// get max risk level depending on aggressiveness (<=.4 -> 0; >.4-.8 -> 1; else 2-3)
-		float maxRiskLevel = (float)((aiWeightings.mAggressiveness < 0.8f) ? ((aiWeightings.mAggressiveness <= 0.4f) ? 0 : 1) : RandomUtility.GetRandom(2, 4));
+		float maxRiskLevel = (float)((mTeam.customAggressiveness < 0.8f) ? ((mTeam.customAggressiveness <= 0.4f) ? 0 : 1) : RandomUtility.GetRandom(2, 4));
 		bool isBanned = carManager.partInventory.GetMostRecentParts(1, CarPart.PartType.None)[0].isBanned;
 
 		if (debugLog)
