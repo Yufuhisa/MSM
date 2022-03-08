@@ -63,11 +63,15 @@ public class TeamManager : GenericManager<Team>
 			team.driversBodyStyle = databaseEntry.GetIntValue("Driver BodyStyle");
 			team.nationality = Nationality.GetNationalityByName(databaseEntry.GetStringValue("Location"));
 			team.customStartDescription = databaseEntry.GetStringValue("Custom Start Description");
+			// custom aggressiveness cause there seems to be an error in reading the right teamAIWeightings 
+			team.customAggressiveness = databaseEntry.GetFloatValue("Custom Aggressiveness");
 			int num = 1000000;
 			team.financeController.racePayment = (long)(databaseEntry.GetFloatValue("Race Payment Offset") * (float)num);
 			team.financeController.racePaymentOffset = team.financeController.racePayment;
 			team.financeController.availableFunds = (long)(databaseEntry.GetFloatValue("Budget") * (float)num);
+
 			DatabaseEntry databaseEntry2 = database.teamAIWeightings.Find((DatabaseEntry x) => x.GetIntValue("Team Index") == index);
+
 			if (databaseEntry2 == null)
 			{
 				Debug.LogErrorFormat("Missing AIWeightingsEntry for team ID: {0}", new object[]
@@ -77,6 +81,16 @@ public class TeamManager : GenericManager<Team>
 				databaseEntry2 = database.teamAIWeightings[0];
 			}
 			team.aiWeightings = new TeamAIWeightings(databaseEntry2);
+			
+			if (index <= 19) {
+				global::Debug.LogErrorFormat("LoadDatabaseCeck: Team {0} with index {1} and mAggressiveness {2} and customAggressiveness {3}", new object[] {
+					team.name,
+					index,
+					team.aiWeightings.mAggressiveness,
+					team.customAggressiveness
+				});
+			}
+
 			team.PostInitialise();
 			team.votingCharacteristics = this.GetCharacteristics(databaseEntry.GetStringValue("Political Attributes"));
 		}

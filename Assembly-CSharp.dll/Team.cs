@@ -1732,6 +1732,8 @@ public class Team : Entity
 
 	public float aggression;
 
+	public float customAggressiveness;
+
 	public float initialTotalFanBase;
 
 	public int colorID;
