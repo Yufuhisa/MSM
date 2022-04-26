@@ -32,7 +32,7 @@ public class CarPartStats
 			break;
 		case CarPartStats.CarPartStat.Reliability:
 			this.mReliability += inValue;
-			this.mReliability = Mathf.Clamp(this.mReliability, 0f, this.maxReliability);
+			this.mReliability = Mathf.Clamp(this.mReliability, 0f, this.GetMaxReliability());
 			break;
 		case CarPartStats.CarPartStat.Condition:
 			this.partCondition.SetCondition(this.partCondition.condition + inValue);
@@ -62,7 +62,7 @@ public class CarPartStats
 			break;
 		case CarPartStats.CarPartStat.Reliability:
 			this.mReliability = inValue;
-			this.mReliability = Mathf.Clamp(this.mReliability, 0f, this.maxReliability);
+			this.mReliability = Mathf.Clamp(this.mReliability, 0f, this.GetMaxReliability());
 			this.SetStat(CarPartStats.CarPartStat.Condition, this.mReliability);
 			break;
 		case CarPartStats.CarPartStat.Condition:
@@ -300,7 +300,11 @@ public class CarPartStats
 	}
 
 	public void SetMaxReliability(float inValue) {
-		maxReliability = Mathf.Clamp(inValue, 0f, GameStatsConstants.absolutMaxReliability);
+		maxReliability = inValue;
+	}
+
+	public void AddMaxReliability(float inValue) {
+		maxReliability += inValue;
 	}
 
 	private float maxReliability = GameStatsConstants.initialMaxReliabilityValue;

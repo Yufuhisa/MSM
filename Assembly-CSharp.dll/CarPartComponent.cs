@@ -118,7 +118,7 @@ public class CarPartComponent : fsISerializationCallbacks
 		inPart.stats.rulesRisk += this.riskLevel;
 		inPart.stats.maxPerformance += this.maxStatBoost;
 		inPart.stats.partCondition.redZone += this.redZone;
-		inPart.stats.SetMaxReliability(inPart.stats.GetMaxReliability() + this.maxReliabilityBoost);
+		inPart.stats.AddMaxReliability(this.maxReliabilityBoost);
 		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, inPart.stats.stat + this.statBoost);
 		inPart.stats.SetStat(CarPartStats.CarPartStat.Reliability, inPart.stats.reliability + this.reliabilityBoost);
 	}
