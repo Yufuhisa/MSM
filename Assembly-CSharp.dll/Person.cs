@@ -457,6 +457,10 @@ public class Person : Entity, IEquatable<Person>, IComparable<Person>
 			{
 				return Person.InterestedToTalkResponseType.WontDriveForThatSeries;
 			}
+			if (inTeam.championship.championshipID == 0 && !driver.HasSuperLizens())
+			{
+				return Person.InterestedToTalkResponseType.NotInterestedToTalkGeneric;
+			}
 			if (Game.IsActive() && Game.instance.challengeManager != null && Game.instance.challengeManager.IsAttemptingChallenge() && Game.instance.challengeManager.currentChallenge.id == 3 && driver.personalityTraitController.HasSpecialCase(PersonalityTrait.SpecialCaseType.ChairmansHappinessMirrorsDriver))
 			{
 				return Person.InterestedToTalkResponseType.NotInterestedToTalkGeneric;
