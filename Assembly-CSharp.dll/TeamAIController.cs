@@ -445,94 +445,80 @@ public class TeamAIController
 
 		// gather current information about all car stats
 		TeamAIWeightings aiWeightings = this.mTeam.aiWeightings;
-		Dictionary<CarStats.StatType, TeamAIController.CarUpgradeStatValues> dictionary = new Dictionary<CarStats.StatType, TeamAIController.CarUpgradeStatValues>();
+		List<TeamAIController.CarUpgradeStatValues> carUpgradeStatList = new List<TeamAIController.CarUpgradeStatValues>();
 		List<CarPart.PartType> list = new List<CarPart.PartType>(CarPart.GetPartType(this.mTeam.championship.series, false));
 		for (CarStats.StatType statType = CarStats.StatType.TopSpeed; statType < CarStats.StatType.Count; statType++)
 		{
+			// get PartType for CarStat in this championship
 			CarPart.PartType partForStatType = CarPart.GetPartForStatType(statType, this.mTeam.championship.series);
-			if (list.Contains(partForStatType))
-			{
-				TeamAIController.CarUpgradeStatValues carUpgradeStatValues = new TeamAIController.CarUpgradeStatValues();
-				carUpgradeStatValues.weighting = aiWeightings.GetStatWeight(statType);
-				carUpgradeStatValues.highestStatOnGrid = carManager.GetCarStatValueOnGrid(statType, CarManager.MedianTypes.Highest);
-				carUpgradeStatValues.difference = (carManager.partInventory.GetHighestStatOfType(CarPart.GetPartForStatType(statType, this.mTeam.championship.series), CarPartStats.CarPartStat.MainStat) - carUpgradeStatValues.highestStatOnGrid) * carUpgradeStatValues.weighting;
-				carUpgradeStatValues.partType = CarPart.GetPartForStatType(statType, this.mTeam.championship.series);
-				List<CarPart> highestLevelPartsOfType = carManager.partInventory.GetHighestLevelPartsOfType(CarPart.GetPartForStatType(statType, this.mTeam.championship.series), false);
-				PartTypeSlotSettings partTypeSlotSettings = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][carUpgradeStatValues.partType];
-				int num3 = highestLevelPartsOfType[0].stats.level + 1;
-				bool flag = partTypeSlotSettings.IsUnlocked(this.mTeam, num3);
-				carUpgradeStatValues.isSpecPart = this.mTeam.championship.rules.specParts.Contains(carUpgradeStatValues.partType);
-				carUpgradeStatValues.gotTwoPartsOfBestPossibleLevel = (highestLevelPartsOfType.Count >= 3 || (highestLevelPartsOfType.Count >= 2 && !flag) || (highestLevelPartsOfType.Count >= 2 && num3 >= 5));
-				carUpgradeStatValues.nPartsOfbestPossibleLevel = highestLevelPartsOfType.Count;
-				carUpgradeStatValues.has5ComponentSlots = (carManager.carPartDesign.GetNumberOfSlots(carUpgradeStatValues.partType) == GameStatsConstants.slotCount);
-				dictionary.Add(statType, carUpgradeStatValues);
-			}
-		}
-		
-		// create list of parts that need to be upgraded (50 points below best part in grid(league?))
-		float num4 = -50f;
-		List<CarPart.PartType> list2 = new List<CarPart.PartType>();
-		for (CarStats.StatType statType3 = CarStats.StatType.TopSpeed; statType3 < CarStats.StatType.Count; statType3++)
-		{
-			if (dictionary.ContainsKey(statType3))
-			{
-				TeamAIController.CarUpgradeStatValues carUpgradeStatValues2 = dictionary[statType3];
-				if (carUpgradeStatValues2.difference < num4 && !carUpgradeStatValues2.isSpecPart && !carUpgradeStatValues2.gotTwoPartsOfBestPossibleLevel)
-				{
-					num4 = carUpgradeStatValues2.difference;
-					list2.Add(carUpgradeStatValues2.partType);
-				}
-			}
-		}
-		if (infoLog2) {
-			global::Debug.LogErrorFormat("Found {0} part types with main stats less than 50 points below best in grid:", new object[] { list2.Count });
-			for (int i = 0; i < list2.Count; i++)
-				global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
+			
+			// skip parts that are specParts for this championship
+			if(this.mTeam.championship.rules.specParts.Contains(partForStatType))
+				continue;
+
+			// skip PartType that are not part of championship (this should never happen!)
+			if (!list.Contains(partForStatType))
+				continue;
+
+			// find best current parts/level
+			List<CarPart> highestLevelPartsOfType = carManager.partInventory.GetHighestLevelPartsOfType(CarPart.GetPartForStatType(statType, this.mTeam.championship.series), false);
+			int currentHighestLevel = highestLevelPartsOfType[0].stats.level;
+
+			// if already two level 5 parts further development is impossible
+			if (currentHighestLevel >= 5 && highestLevelPartsOfType.Count >= 2)
+				continue;
+
+			// check if next level is available
+			PartTypeSlotSettings partTypeSlotSettings = Game.instance.partSettingsManager.championshipPartSettings[this.mTeam.championship.championshipID][partForStatType];
+			bool nextLevelAvailable = partTypeSlotSettings.IsUnlocked(this.mTeam, currentHighestLevel + 1);
+
+			// if already two parts of current max level further development is impossible
+			if (!nextLevelAvailable && highestLevelPartsOfType.Count >= 2)
+				continue;
+
+
+			TeamAIController.CarUpgradeStatValues carUpgradeStatValues = new TeamAIController.CarUpgradeStatValues();
+			carUpgradeStatValues.partType = partForStatType;
+
+			// Engines (TopSpeed) gets double weightings to determine most important part to upgrade
+			float weighting = 1f;
+			if (statType == CarStats.StatType.TopSpeed)
+				weighting = 2f;
+			// calculate difference values for team vs average of championship
+			float averageStatOnGrid = carManager.GetCarStatValueOnGrid(statType, CarManager.MedianTypes.Average);
+			float highestStatOnTeam = carManager.partInventory.GetHighestStatOfType(CarPart.GetPartForStatType(statType, this.mTeam.championship.series), CarPartStats.CarPartStat.MainStat);
+			carUpgradeStatValues.differenceAverage = (highestStatOnTeam - averageStatOnGrid) * weighting;
+
+			carUpgradeStatList.Add(carUpgradeStatValues);
 		}
 
-		// if non found, search for upgradeable PartTypes
-		if (list2.Count == 0)
-		{
-			num4 = 0f;
-			for (CarStats.StatType statType4 = CarStats.StatType.TopSpeed; statType4 < CarStats.StatType.Count; statType4++)
-			{
-				if (dictionary.ContainsKey(statType4))
-				{
-					TeamAIController.CarUpgradeStatValues carUpgradeStatValues3 = dictionary[statType4];
-					if (!carUpgradeStatValues3.isSpecPart && ((carUpgradeStatValues3.nPartsOfbestPossibleLevel < 3 && !carUpgradeStatValues3.has5ComponentSlots) || !carUpgradeStatValues3.gotTwoPartsOfBestPossibleLevel) && carUpgradeStatValues3.difference < num4)
-					{
-						num4 = carUpgradeStatValues3.difference;
-						list2.Add(carUpgradeStatValues3.partType);
-					}
-				}
-			}
-			if (infoLog2) {
-				global::Debug.LogErrorFormat("Alternative search: Found {0} part types which are upgradeable:", new object[] { list2.Count });
-				for (int i = 0; i < list2.Count; i++)
-					global::Debug.LogErrorFormat("{0}. PartType: {1}", new object[] { i, list2[i] });
-			}
-		}
-		
 		// stop if no upgradeable parts found
-		if (list2.Count == 0) {
+		if (carUpgradeStatList.Count == 0) {
 			if (infoLog2)
 				global::Debug.LogErrorFormat("Found no upgradeable parts");
 			this.mLastCarUpdateTime = Game.instance.time.now;
 			this.ImproveCarParts(carManager);
 			return;
 		}
-		
-		// develop last upgradable part type (also see order of CarPart.PartType)
-		CarPart.PartType partType = list2[list2.Count-1];
-		// if partType was already last developed part type, select at random
-		if (carManager.carPartDesign.lastCarPart != null && carManager.carPartDesign.lastCarPart.GetPartType() == partType) {
-			partType = list2[RandomUtility.GetRandom(0, list2.Count)];
+
+		// Sort List for biggest stat gap compared to average to find most important part to upgrade
+		carUpgradeStatList.Sort((TeamAIController.CarUpgradeStatValues upgradeA, TeamAIController.CarUpgradeStatValues upgradeB) => upgradeA.differenceAverage.CompareTo(upgradeB.differenceAverage));
+		CarPart.PartType partType = carUpgradeStatList[0].partType;
+
+		if (infoLog2) {
+			global::Debug.LogErrorFormat("Found {0} upgradable CarParts", new object[] { carUpgradeStatList.Count });
+			for (int m = 0; m < carUpgradeStatList.Count; m++)
+				global::Debug.LogErrorFormat("{0}. PartType {1} with weighted differenceAverage {2}", new object[] {
+					m
+					, carUpgradeStatList[m].partType
+					, carUpgradeStatList[m].differenceAverage
+				});
 		}
 
 		// get max risk level depending on aggressiveness (<=.4 -> 0; >.4-.8 -> 1; else 2-3)
 		float maxRiskLevel = (float)((mTeam.customAggressiveness < 0.8f) ? ((mTeam.customAggressiveness <= 0.4f) ? 0 : 1) : RandomUtility.GetRandom(2, 4));
 		bool isBanned = carManager.partInventory.GetMostRecentParts(1, CarPart.PartType.None)[0].isBanned;
-		float targetMaxReliability = GameStatsConstants.absolutMaxReliability - (this.mTeam.customAggressiveness * 0.4f);
+		float targetMaxReliability = GameStatsConstants.targetMaxReliabilityMax - (GameStatsConstants.targetMaxReliabilityMax - GameStatsConstants.targetMaxReliabilityMin) * mTeam.customAggressiveness;
 
 		if (debugLog)
 			global::Debug.LogErrorFormat("Start Design for PartType {0} with maxRiskLevel {1}, targetMaxReliability {2} and TeamAggressiveness {3}", new object[] {
@@ -553,88 +539,85 @@ public class TeamAIController
 		// loop over component tiers (starting with highest tier)
 		for (int i = componentsForPartType.Keys.Count - 1; i >= 0; i--)
 		{
-
+			int partLevel = i + 1;
+			
 			if (infoLog3)
 				global::Debug.LogErrorFormat("Check Level {0} with current Reliability {1}; hasSlotForLevel = {2}; isUnlocked = {3}", new object[] {
-					i + 1
+					partLevel
 					, part.stats.GetMaxReliability()
-					, carPartDesign.HasSlotForLevel(i + 1)
+					, carPartDesign.HasSlotForLevel(partLevel)
 					, partTypeSlotSettings2.IsUnlocked(this.mTeam, i)
 				});
 
-			// check if ComponentLevel is available in Part and for Team
-			if (!carPartDesign.HasSlotForLevel(i + 1) || !partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
+			// check if ComponentLevel is available in Part and for team
+			if (!carPartDesign.HasSlotForLevel(partLevel) || !partTypeSlotSettings2.IsUnlocked(this.mTeam, i))
 				continue;
 
-			List<CarPartComponent> componentList = componentsForPartType[i];
+			List<CarPartComponent> componentList = new List<CarPartComponent>(componentsForPartType[i].ToArray());
 
 			// add engineer component, if available and if team aggressiveness is high enough (aggressiveness = 0 is player only)
-			CarPartComponent engineerComponent = engineer.GetComponentForLevel(i);
+			CarPartComponent engineerComponent = engineer.GetComponentForLevel(partLevel);
 			if (engineerComponent != null && engineerComponent.IsAvailableForType(partType) && engineerComponent.agressiveTeamWeightings > 0)
 				componentList.Add(engineerComponent);
 
-			if (this.mTeam.customAggressiveness > 0.5f)
+			// 1. Loop to fill all component slots for this level
+			int maxComponents = componentList.Count;
+			for (int n_comp = 0; n_comp < maxComponents; n_comp++)
 			{
+				// if all component slots for current level are filled, break and go for next level
+				if (!carPartDesign.HasSlotForLevel(partLevel))
+					break;
+
+				// sort parts for reliability or performance
 				if (part.stats.GetMaxReliability() < targetMaxReliability)
 					TeamAIController.SortPartComponentsForMaxReliabilityAgressive(componentList);
 				else
 					TeamAIController.SortPartComponentsForAgressiveTeams(componentList);
-			}
-			else
-			{
-				if (part.stats.GetMaxReliability() < targetMaxReliability)
-					TeamAIController.SortPartComponentsForMaxReliabilityNonAgressive(componentList);
-				else
-					TeamAIController.SortPartComponentsForNonAgressiveTeams(componentList);
-			}
-			
-			if (infoLog3) {
-				global::Debug.LogErrorFormat("Partlist (sorted):");
-				for (int l = 0; l < componentList.Count; l++)
-					global::Debug.LogErrorFormat("Part {0}: ID {1} RiskLvl {2} maxReliabilityBoost {3} aggrWeightings {4} nonAggrWeightings {5}", new object[] {
-						l + 1
-						, componentList[l].id
-						, componentList[l].riskLevel
-						, componentList[l].maxReliabilityBoost
-						, componentList[l].agressiveTeamWeightings
-						, componentList[l].nonAgressiveTeamWeightings
-					});
-			}
 
-			for (int j = 0; j < componentList.Count; j++)
-			{
-				CarPartComponent carPartComponent = componentList[j];
-				if (carPartComponent.IsUnlocked(this.mTeam))
+				if (infoLog3) {
+					global::Debug.LogErrorFormat("Partlist (sorted):");
+					for (int l = 0; l < componentList.Count; l++)
+						global::Debug.LogErrorFormat("Part {0}: ID {1} RiskLvl {2} maxReliabilityBoost {3} aggrWeightings {4}", new object[] {
+							l + 1
+							, componentList[l].id
+							, componentList[l].riskLevel
+							, componentList[l].maxReliabilityBoost
+							, componentList[l].agressiveTeamWeightings
+						});
+				}
+				
+				// loop over sorted components to test them
+				for (int j = 0; j < componentList.Count; j++)
 				{
-					if (!carPartDesign.HasSlotForLevel(carPartComponent.level))
-					{
-						break;
-					}
-					
-					bool riskLevelToHigh = (carPartComponent.riskLevel != 0f && (!isBanned || maxRiskLevel >= carPartComponent.riskLevel));
-					bool lastComponent = (i == 0 && j == componentList.Count - 1);
+					CarPartComponent carPartComponent = componentList[j];
+
+					bool riskLevelToHigh = carPartComponent.riskLevel > 0f && (!isBanned || carPartComponent.riskLevel > maxRiskLevel);
+					bool noReduceRiskLevel = Math.Round(part.stats.rulesRisk, 0) == 0f && carPartComponent.riskLevel < 0f;
 					bool targetMaxReliabilityReached = (carPartComponent.maxReliabilityBoost >= 0f || (part.stats.GetMaxReliability() + carPartComponent.maxReliabilityBoost) >= targetMaxReliability);
-					
-					if (targetMaxReliabilityReached && (!riskLevelToHigh || lastComponent))
+
+					if (targetMaxReliabilityReached && !riskLevelToHigh && !noReduceRiskLevel)
 					{
 						if (debugLog)
-							global::Debug.LogErrorFormat("Add Component with Level {0} with maxRiskLevel {1} and ID {2}", new object[] { i+1, carPartComponent.riskLevel, carPartComponent.id });
+							global::Debug.LogErrorFormat("Add Component with Level {0} with maxRiskLevel {1} and ID {2}", new object[] { partLevel, carPartComponent.riskLevel, carPartComponent.id });
+						// add component to part and update remaining risk levels
 						carPartDesign.AddComponent(part, carPartComponent);
 						maxRiskLevel -= carPartComponent.riskLevel;
-					}
-					if (!part.hasComponentSlotsAvailable)
-					{
+						// remove component from component list and break loop for current sorted component list
+						componentList.Remove(carPartComponent);
 						break;
 					}
 				}
 			}
-			if (!part.hasComponentSlotsAvailable)
-			{
-				break;
-			}
 		}
 
-		if ((long)carManager.carPartDesign.GetDesignCost() < moneyForCars)
+		if ((long)carManager.carPartDesign.GetDesignCost() > moneyForCars) {
+			if (debugLog)
+				global::Debug.LogErrorFormat("Stop Design because it's to expensive. Cost: {0}, Available money: {1}", new object[] {
+					carManager.carPartDesign.GetDesignCost()
+					, moneyForCars
+				});
+		}
+		else
 		{
 			Transaction transaction = new Transaction(Transaction.Group.CarParts, Transaction.Type.Debit, carManager.carPartDesign.GetDesignCost(), carManager.carPartDesign.part.GetPartName());
 			this.mTeam.financeController.finance.ProcessTransactions(null, null, false, new Transaction[]
@@ -681,58 +664,134 @@ public class TeamAIController
 
 	private void ImproveCarParts(CarManager inCarManager)
 	{
-		this.FitPartsOnCars();
 		PartImprovement partImprovement = inCarManager.partImprovement;
+		float teamMinReliability = GameStatsConstants.targetReliabilityMax - (GameStatsConstants.targetReliabilityMax - GameStatsConstants.targetReliabilityMin) * this.mTeam.customAggressiveness;
+		Circuit nextCircuit = this.mTeam.championship.calendar[this.mTeam.championship.eventNumber].circuit;
+
+		// reset part improvement to default (for this team)
 		partImprovement.RemoveAllPartImprove(CarPartStats.CarPartStat.Reliability);
 		partImprovement.RemoveAllPartImprove(CarPartStats.CarPartStat.Performance);
-		CarPart part = inCarManager.carPartDesign.part;
-		if (part != null)
+		partImprovement.playerMechanicsPreference = this.mTeam.customAggressiveness;
+
+		CarPart.PartType[] partType = CarPart.GetPartType(this.mTeam.championship.series, false);
+		List<CarPart> bestParts = new List<CarPart>();
+		for (int i = 0; i < partType.Length; i++)
 		{
-			CarPart highestStatPartOfType = inCarManager.partInventory.GetHighestStatPartOfType(part.GetPartType());
-			partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, highestStatPartOfType);
-			partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Performance, highestStatPartOfType);
+			// List of alle Parts, sorted by level
+			List<CarPart> partsForType = inCarManager.partInventory.GetPartInventory(partType[i]);
+
+			// take the two best parts (sorting by tier is good enough)
+			partsForType.Sort((CarPart a, CarPart b) => b.stats.level.CompareTo(a.stats.level));
+			if (partsForType.Count >= 1)
+				bestParts.Add(partsForType[0]);
+			if (partsForType.Count >= 2)
+				bestParts.Add(partsForType[1]);
 		}
-		float num = Mathf.Lerp(TeamAIController.carImprovementReliabilityMinAggression, TeamAIController.carImprovementReliabilityMaxAggression, this.mTeam.aiWeightings.mAggressiveness);
-		Championship championship = this.mTeam.championship;
-		Circuit circuit = championship.calendar[championship.eventNumber].circuit;
-		partImprovement.SplitMechanics(this.mTeam.aiWeightings.mAggressiveness);
-		partImprovement.playerMechanicsPreference = this.mTeam.aiWeightings.mAggressiveness;
-		List<CarPart> list = new List<CarPart>(CarManager.carCount * 6);
-		for (int i = 0; i < CarManager.carCount; i++)
-		{
-			Car car = inCarManager.GetCar(i);
-			for (int j = 0; j < car.seriesCurrentParts.Length; j++)
-			{
-				CarPart carPart = car.seriesCurrentParts[j];
-				if (carPart.stats.reliability < num)
-				{
-					partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, carPart);
-					partImprovement.SplitMechanics(0f);
-					partImprovement.playerMechanicsPreference = 0f;
-				}
-				CarStats.RelevantToCircuit relevancy = CarStats.GetRelevancy(Mathf.RoundToInt(circuit.trackStatsCharacteristics.GetStat(CarPart.GetStatForPartType(carPart.GetPartType()))));
-				if (relevancy == CarStats.RelevantToCircuit.VeryImportant)
-				{
-					partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Performance, carPart);
-					list.Add(carPart);
-				}
+
+		bestParts.Sort((CarPart a, CarPart b) => b.stats.level.CompareTo(a.stats.level));
+
+		if (this.mTeam.championship.championshipID == 0) {
+			for (int i = 0; i < bestParts.Count; i++) {
+				global::Debug.LogErrorFormat("ImproveCarParts Team {0} bestParts[{8}] MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
+					this.mTeam.GetShortName()
+					, bestParts[i].stats.statWithPerformance.ToString("##0")
+					, (bestParts[i].stats.stat + bestParts[i].stats.maxPerformance).ToString("##0")
+					, (bestParts[i].stats.reliability * 100f).ToString("##0")
+					, (bestParts[i].stats.GetMaxReliability() * 100f).ToString("##0")
+					, bestParts[i].GetPartType()
+					, bestParts[i].stats.level
+					, teamMinReliability
+					, i
+				});
 			}
 		}
-		if (!partImprovement.WorkOnStatActive(CarPartStats.CarPartStat.Reliability))
-		{
-			for (int k = 0; k < list.Count; k++)
-			{
-				partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, list[k]);
+
+		// find (improvable) parts with less than teamMinReliability
+		List<CarPart> relImproveParts = new List<CarPart>();
+		for (int i = 0; i < bestParts.Count; i++) {
+			if (bestParts[i].reliability < teamMinReliability && bestParts[i].reliability < bestParts[i].stats.GetMaxReliability())
+				relImproveParts.Add(bestParts[i]);
+		}
+
+		int partCountReliability = 2;
+		// add all reliabilityParts to reliability improvement list
+		for (int i = 0; i < relImproveParts.Count && partCountReliability > 0; i++) {
+			partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, relImproveParts[i]);
+			partCountReliability--;
+		}
+		// add best (improvable) performance parts to reliability improvement list that is important for next circuit (and weren't already add with reliabilityParts)
+		for (int i = 0; i < bestParts.Count && partCountReliability > 0; i++) {
+			// check if part is very import for next circuit
+			bool important = CarStats.RelevantToCircuit.VeryImportant == CarStats.GetRelevancy(Mathf.RoundToInt(nextCircuit.trackStatsCharacteristics.GetStat(CarPart.GetStatForPartType(bestParts[i].GetPartType()))));
+			if (bestParts[i].reliability < bestParts[i].stats.GetMaxReliability() && !partImprovement.partsToImprove[(int)CarPartStats.CarPartStat.Reliability].Contains(bestParts[i]) && important) {
+				partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, bestParts[i]);
+				partCountReliability--;
 			}
 		}
-		for (int l = 0; l < PartImprovement.playerAvailableImprovementTypes.Length; l++)
-		{
-			if (!partImprovement.WorkOnStatActive(PartImprovement.playerAvailableImprovementTypes[l]))
-			{
-				partImprovement.AutoFill(PartImprovement.playerAvailableImprovementTypes[l]);
+		// add best (improvable) performance parts to reliability improvement list (that weren't already add with reliabilityParts)
+		for (int i = 0; i < bestParts.Count && partCountReliability > 0; i++) {
+			if (bestParts[i].reliability < bestParts[i].stats.GetMaxReliability() && !partImprovement.partsToImprove[(int)CarPartStats.CarPartStat.Reliability].Contains(bestParts[i])) {
+				partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Reliability, bestParts[i]);
+				partCountReliability--;
 			}
 		}
-		this.FitPartsWithMinReliability();
+
+		int partCountPerformance = 2;
+		// add best (improvable) performance parts to performance improvement list that is important for next circuit
+		for (int i = 0; i < bestParts.Count && partCountPerformance > 0; i++) {
+			// check if part is very import for next circuit
+			bool important = CarStats.RelevantToCircuit.VeryImportant == CarStats.GetRelevancy(Mathf.RoundToInt(nextCircuit.trackStatsCharacteristics.GetStat(CarPart.GetStatForPartType(bestParts[i].GetPartType()))));
+			if (important) {
+				partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Performance, bestParts[i]);
+				partCountPerformance--;
+			}
+		}
+		// add best (improvable) performance parts to performance improvement list (that weren't already add with reliabilityParts)
+		for (int i = 0; i < bestParts.Count && partCountPerformance > 0; i++) {
+			if (!partImprovement.partsToImprove[(int)CarPartStats.CarPartStat.Performance].Contains(bestParts[i])) {
+				partImprovement.AddPartToImprove(CarPartStats.CarPartStat.Performance, bestParts[i]);
+				partCountPerformance--;
+			}
+		}
+
+		if (this.mTeam.championship.championshipID == 0) {
+			List<CarPart> list = partImprovement.partsToImprove[(int)CarPartStats.CarPartStat.Reliability];
+			for (int i = 0; i < list.Count; i++) {
+				global::Debug.LogErrorFormat("ImproveCarParts Team {0} impRel[{8}] MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
+					this.mTeam.GetShortName()
+					, list[i].stats.statWithPerformance.ToString("##0")
+					, (list[i].stats.stat + list[i].stats.maxPerformance).ToString("##0")
+					, (list[i].stats.reliability * 100f).ToString("##0")
+					, (list[i].stats.GetMaxReliability() * 100f).ToString("##0")
+					, list[i].GetPartType()
+					, list[i].stats.level
+					, teamMinReliability
+					, i
+				});
+			}
+			list = partImprovement.partsToImprove[(int)CarPartStats.CarPartStat.Performance];
+			for (int i = 0; i < list.Count; i++) {
+				global::Debug.LogErrorFormat("ImproveCarParts Team {0} impPerf[{8}] MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
+					this.mTeam.GetShortName()
+					, list[i].stats.statWithPerformance.ToString("##0")
+					, (list[i].stats.stat + list[i].stats.maxPerformance).ToString("##0")
+					, (list[i].stats.reliability * 100f).ToString("##0")
+					, (list[i].stats.GetMaxReliability() * 100f).ToString("##0")
+					, list[i].GetPartType()
+					, list[i].stats.level
+					, teamMinReliability
+					, i
+				});
+			}
+			global::Debug.LogErrorFormat("ImproveCarParts Team {0} Mechanics on Reliability: {1}", new object[] {
+				this.mTeam.GetShortName()
+				, partImprovement.mechanics[(int)CarPartStats.CarPartStat.Reliability]
+			});
+			global::Debug.LogErrorFormat("ImproveCarParts Team {0} Mechanics on Performance: {1}", new object[] {
+				this.mTeam.GetShortName()
+				, partImprovement.mechanics[(int)CarPartStats.CarPartStat.Performance]
+			});
+		}
 	}
 
 	private static void SortPartComponentsForNonAgressiveTeams(List<CarPartComponent> lPartsForLevel)
@@ -759,28 +818,6 @@ public class TeamAIController
 	{
 		this.mTeam.carManager.AutoFit(this.mTeam.carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.AllParts);
 		this.mTeam.carManager.AutoFit(this.mTeam.carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-	}
-
-	public void FitPartsWithMinReliability()
-	{
-		CarManager carManager = this.mTeam.carManager;
-		float num = Mathf.Lerp(TeamAIController.carImprovementReliabilityMinAggression, TeamAIController.carImprovementReliabilityMaxAggression, this.mTeam.aiWeightings.mAggressiveness);
-		for (int i = 0; i < CarManager.carCount; i++)
-		{
-			Car car = carManager.GetCar(i);
-			for (int j = 0; j < car.seriesCurrentParts.Length; j++)
-			{
-				CarPart carPart = car.seriesCurrentParts[j];
-				if (carPart.stats.reliability < num)
-				{
-					CarPart suitablePartForCar = this.GetSuitablePartForCar(carManager, carPart, num);
-					if (suitablePartForCar != null)
-					{
-						car.FitPart(suitablePartForCar);
-					}
-				}
-			}
-		}
 	}
 
 	private CarPart GetSuitablePartForCar(CarManager inCarManager, CarPart inPartToReplace, float inMinReliability)
@@ -2927,10 +2964,6 @@ public class TeamAIController
 
 	private static readonly float firingChanceScalar = 0.25f;
 
-	private static readonly float carImprovementReliabilityMinAggression = 1f;
-
-	private static readonly float carImprovementReliabilityMaxAggression = 0.65f;
-
 	[NonSerialized]
 	private List<SponsorshipDeal> mChosenDealsCache = new List<SponsorshipDeal>();
 
@@ -3012,25 +3045,9 @@ public class TeamAIController
 
 	public class CarUpgradeStatValues
 	{
-		public CarUpgradeStatValues()
-		{
-		}
-
 		public CarPart.PartType partType = CarPart.PartType.None;
 
-		public float weighting;
-
-		public float highestStatOnGrid;
-
-		public float difference;
-
-		public bool gotTwoPartsOfBestPossibleLevel;
-
-		public int nPartsOfbestPossibleLevel;
-
-		public bool has5ComponentSlots;
-
-		public bool isSpecPart;
+		public float differenceAverage;
 	}
 	
 	public enum DriverSearchType

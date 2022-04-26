@@ -40,6 +40,10 @@ public static class GameStatsConstants
 
 	public static float absolutMaxReliability = 0.98f; // highest possible maxReliability
 
+	public static float targetMaxReliabilityMin = 0.58f; // part MaxReliability that Teams with max aggressivity (1.0) strife for (in development)
+
+	public static float targetMaxReliabilityMax = 0.98f; // part  MaxReliability that Teams with min aggressivity (0.0) strife for (in development)
+
 	public static float baseCarPartPerformance = 20f;
 
 	public static float initialRedZone = 0.2f;
