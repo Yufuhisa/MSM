@@ -56,12 +56,14 @@ public class CriticalCarPartPerformance : PerformanceImpact
 		// calculate time cost (1.5 second for 100 points below best car)
 		float timeCost = (bestCarStats - thisCarStats) * 1.5f / 100f;
 		base.IncreaseTimeCost(timeCost);
+/*
 		global::Debug.LogErrorFormat("Calculate Performance Time Cost, for Driver {0}, TimeCoastDriver {1} CarStats {2} BestCarStats {3}", new object[] {
 			this.mVehicle.GetName()
 		  , timeCost.ToString("#0.00")
 		  , bestCarStats.ToString("##00.00")
 		  , thisCarStats.ToString("##00.00")
 		});
+*/
 	}
 
 	public override void SimulationUpdate(float inDeltaTime)
