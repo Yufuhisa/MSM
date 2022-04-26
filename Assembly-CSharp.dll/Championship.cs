@@ -789,6 +789,54 @@ public class Championship : Entity
 	public void OnSessionStart()
 	{
 		RaceEventDetails currentEventDetails = this.GetCurrentEventDetails();
+		if (this.championshipID == 0 && currentEventDetails.currentSession.sessionType == SessionDetails.SessionType.Race) {
+			for (int i = 0; i < this.standings.teamEntryCount; i++)
+			{
+				for (int j = 0; j < 2; j++) {
+					float reliability = 0f;
+					float performance = 0f;
+					float maxReliability = 0f;
+					float maxPerformance = 0f;
+					int partNum = 0;
+					CarPart[] carParts = this.standings.GetTeamEntry(i).GetEntity<Team>().carManager.GetCar(j).seriesCurrentParts;
+					for (int m = 0; m < carParts.Length; m++)
+					{
+						if (carParts[m] != null)
+						{
+							performance += carParts[m].stats.statWithPerformance;
+							maxPerformance += carParts[m].stats.stat;
+							maxPerformance += carParts[m].stats.maxPerformance;
+							reliability += carParts[m].stats.reliability * 100f;
+							maxReliability += carParts[m].stats.GetMaxReliability() * 100f;
+							partNum++;
+						}
+						global::Debug.LogErrorFormat("Team {0} Car {5} Part {6} Stats: Tier {7} RiskLevel {8} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
+							this.standings.GetTeamEntry(i).GetEntity<Team>().GetShortName()
+							, carParts[m].stats.statWithPerformance.ToString("##0")
+							, (carParts[m].stats.stat + carParts[m].stats.maxPerformance).ToString("##0")
+							, (carParts[m].stats.reliability * 100f).ToString("##0")
+							, (carParts[m].stats.GetMaxReliability() * 100f).ToString("##0")
+							, j + 1
+							, carParts[m].GetPartType()
+							, carParts[m].stats.level
+							, carParts[m].stats.rulesRisk.ToString("0")
+						});
+					}
+					reliability /= partNum;
+					performance /= partNum;
+					maxReliability /= partNum;
+					maxPerformance /= partNum;
+					global::Debug.LogErrorFormat("Team {0} Car {5} Mean Stats: Performance {1}/{2}, Reliability {3}/{4}", new object[] {
+						this.standings.GetTeamEntry(i).GetEntity<Team>().GetShortName()
+						, performance.ToString("##0")
+						, maxPerformance.ToString("##0")
+						, reliability.ToString("##0")
+						, maxReliability.ToString("##0")
+						, j + 1
+					});
+				}
+			}
+		}
 		currentEventDetails.OnSessionStart();
 		Game.instance.persistentEventData.OnSessionStart();
 	}
