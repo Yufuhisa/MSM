@@ -34,11 +34,11 @@ public static class GameStatsConstants
 
 	public static int slotCount = 5;
 
-	public static float initialReliabilityValue = 0.55f;
+	public static float initialReliabilityValue = 0.55f; // initial part reliability
 
-	public static float initialMaxReliabilityValue = 0.74f;
+	public static float initialMaxReliabilityValue = 0.74f; // initial part maxReliability
 
-	public static float absolutMaxReliability = 0.98f;
+	public static float absolutMaxReliability = 0.98f; // highest possible maxReliability
 
 	public static float baseCarPartPerformance = 20f;
 
