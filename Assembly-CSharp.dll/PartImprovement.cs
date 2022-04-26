@@ -223,20 +223,37 @@ public class PartImprovement
 
 	private void UpdateMechanicsDistribution()
 	{
-		bool flag = this.partsToImprove[1].Count == 0;
-		bool flag2 = this.partsToImprove[3].Count == 0;
-		if (flag && !flag2)
-		{
-			this.SplitMechanics(1f);
+		List<CarPart> relParts = partsToImprove[(int)CarPartStats.CarPartStat.Reliability];
+		List<CarPart> prfParts = partsToImprove[(int)CarPartStats.CarPartStat.Performance];
+
+		// check for relImprove parts below minimum rel for team
+		float teamMinReliability = GameStatsConstants.targetReliabilityMax - (GameStatsConstants.targetReliabilityMax - GameStatsConstants.targetReliabilityMin) * this.mTeam.customAggressiveness;
+		bool prioRel = false;
+		for (int i = 0; i < relParts.Count; i++) {
+			if (relParts[i].reliability < teamMinReliability && relParts[i].reliability < relParts[i].stats.GetMaxReliability()) {
+				prioRel = true;
+				break;
+			}
 		}
-		else if (!flag && flag2)
-		{
+
+		// set mechanic distribution
+		// 1) for AI a part below min rel -> all reliability
+		if (!this.mTeam.IsPlayersTeam() && prioRel) {
 			this.SplitMechanics(0f);
+			return;
 		}
-		else
-		{
-			this.SplitMechanics(this.mPlayerMechanicsPreference);
+		// 2) no performance parts -> all reliability
+		if (prfParts.Count == 0) {
+			this.SplitMechanics(0f);
+			return;
 		}
+		// 3) no reliability parts -> all performance
+		if (relParts.Count == 0) {
+			this.SplitMechanics(1f);
+			return;
+		}
+		// 4) set to default
+		this.SplitMechanics(this.mPlayerMechanicsPreference);
 	}
 
 	public void SendWorkDoneMessage(CarPartStats.CarPartStat inStackType)
