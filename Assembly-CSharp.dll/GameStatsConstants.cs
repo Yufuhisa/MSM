@@ -44,6 +44,10 @@ public static class GameStatsConstants
 
 	public static float targetMaxReliabilityMax = 0.98f; // part  MaxReliability that Teams with min aggressivity (0.0) strife for (in development)
 
+	public static float targetReliabilityMin = 0.55f; // part reliability that Teams with max aggressivity (1.0) strife for (must be below targetMaxReliabilityMin)
+
+	public static float targetReliabilityMax = 0.85f; // part reliability that Teams with min aggressivity (0.0) strife for (must be below targetMaxReliabilityMax)
+
 	public static float baseCarPartPerformance = 20f;
 
 	public static float initialRedZone = 0.2f;
