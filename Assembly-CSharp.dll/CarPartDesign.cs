@@ -254,11 +254,11 @@ public class CarPartDesign
 		float engineerModifier = engineer.stats.partContributionStats.GetStat(inPart.stats.statType);
 
 		float startMainStat = this.seasonPartStartingStat[inPart.GetPartType()];
-		float mainStat = startMainStat + (engineerModifier * CarPartDesign.ENGINEER_SKILL_MAINSTAT_MOD);
+		float mainStat = startMainStat + Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAINSTAT_MOD);
 		inPart.stats.SetStat(CarPartStats.CarPartStat.MainStat, mainStat);
 
 		float startMaxReliablity = this.seasonPartStartingReli[inPart.GetPartType()];
-		float maxReliablity = startMaxReliablity + (Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100);
+		float maxReliablity = startMaxReliablity + Mathf.Floor(engineerModifier * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100;
 		inPart.stats.SetMaxReliability(maxReliablity);
 
 		inPart.stats.level = this.GetLevelFromComponents(inPart);
@@ -851,53 +851,112 @@ public class CarPartDesign
 
 	public string GetPerformanceBreakdown()
 	{
-		int num = this.seasonPartStartingStat[this.mCarPart.GetPartType()];
+		// performance base value
+		int baseValue = this.seasonPartStartingStat[this.mCarPart.GetPartType()];
+
+		// engineer modifier
 		Engineer engineer = (Engineer)this.mTeam.contractManager.GetPersonOnJob(Contract.Job.EngineerLead);
-		string text = string.Empty;
-		StringVariableParser.ordinalNumberString = num.ToString("N0");
-		text += Localisation.LocaliseID("PSG_10010514", null);
-		StringVariableParser.ordinalNumberString = Mathf.FloorToInt(engineer.stats.partContributionStats.GetStat(this.mCarPart.stats.statType)).ToString("N0");
-		text = text + "\n" + Localisation.LocaliseID("PSG_10010515", null);
-		if (this.mCarPart.stats.performance != 0f)
-		{
-			StringVariableParser.ordinalNumberString = this.mCarPart.stats.performance.ToString("N0");
-			text = text + "\n" + Localisation.LocaliseID("PSG_10010637", null);
-		}
-		float num2 = 0f;
+		float engineerStat = engineer.stats.partContributionStats.GetStat(this.mCarPart.stats.statType);
+		int engineerMod = Mathf.FloorToInt(engineerStat * CarPartDesign.ENGINEER_SKILL_MAINSTAT_MOD);
+
+		// component modifier
+		int componentMod = 0;
 		for (int i = 0; i < this.mCarPart.components.Count; i++)
 		{
 			if (this.mCarPart.components[i] != null)
 			{
-				num2 += this.mCarPart.components[i].statBoost;
+				componentMod += Mathf.RoundToInt(this.mCarPart.components[i].statBoost);
 			}
 		}
-		if (num2 != 0f)
-		{
-			StringVariableParser.ordinalNumberString = num2.ToString("N0");
-			text = text + "\n" + Localisation.LocaliseID("PSG_10010516", null);
+
+		// fuel modifier (for engine only)
+		int performanceModFuel = 0;
+		if (this.mCarPart.GetPartType() == CarPart.PartType.Engine) {
+			performanceModFuel = this.mTeam.carManager.GetCar(0).ChassisStats.supplierFuel.randomEngineLevelModifier;
+			baseValue -= performanceModFuel; // season start value allready includes fuel modifier
 		}
-		return text;
+
+		// create tooltip
+		string tooltip = string.Empty;
+		StringVariableParser.ordinalNumberString = baseValue.ToString("N0"); // add base value to buffer
+		tooltip += Localisation.LocaliseID("PSG_10010514", null); // add base string
+		StringVariableParser.ordinalNumberString = engineerMod.ToString("N0"); // add engineer mod value to buffer
+		tooltip += "\n" + "+ " + Localisation.LocaliseID("PSG_10010515", null); // add engineer mod string
+		if (componentMod != 0) {
+			tooltip += "\n";
+			if (componentMod > 0)
+				tooltip += "+ ";
+			else
+				tooltip += "- ";
+			StringVariableParser.ordinalNumberString = Math.Abs(componentMod).ToString("N0"); // add compont mod value to buffer
+			tooltip += Localisation.LocaliseID("PSG_10010516", null); // add component string
+		}
+		if (performanceModFuel != 0) {
+			tooltip += "\n";
+			if (performanceModFuel > 0)
+				tooltip += "+ ";
+			else
+				tooltip += "- ";
+			StringVariableParser.ordinalNumberString = Math.Abs(performanceModFuel).ToString("N0"); // add fuel mod value to buffer
+			tooltip += Localisation.LocaliseID("PSG_17550000", null); // add fuel string
+		}
+
+		return tooltip;
 	}
 
 	public string GetReliabilityBreakdown()
 	{
-		string text = string.Empty;
-		StringVariableParser.ordinalNumberString = GameStatsConstants.initialReliabilityValue.ToString("P0");
-		text += Localisation.LocaliseID("PSG_10010514", null);
-		float num = 0f;
+		// max reliability base value
+		float baseValue = this.seasonPartStartingReli[this.mCarPart.GetPartType()];
+
+		// engineer modifier
+		Engineer engineer = (Engineer)this.mTeam.contractManager.GetPersonOnJob(Contract.Job.EngineerLead);
+		float engineerStat = engineer.stats.partContributionStats.GetStat(this.mCarPart.stats.statType);
+		float engineerMod = Mathf.FloorToInt(engineerStat * CarPartDesign.ENGINEER_SKILL_MAXRELIABLITY_MOD) / 100f;
+
+		// component modifier
+		float componentMod = 0f;
 		for (int i = 0; i < this.mCarPart.components.Count; i++)
 		{
 			if (this.mCarPart.components[i] != null)
 			{
-				num += this.mCarPart.components[i].reliabilityBoost;
+				componentMod += this.mCarPart.components[i].maxReliabilityBoost;
 			}
 		}
-		if (num != 0f)
-		{
-			StringVariableParser.ordinalNumberString = num.ToString("P0");
-			text = text + "\n" + Localisation.LocaliseID("PSG_10010516", null);
+
+		// fuel modifier (for engine only)
+		float performanceModFuel = 0f;
+		if (this.mCarPart.GetPartType() == CarPart.PartType.Engine) {
+			performanceModFuel = this.team.carManager.GetCar(0).ChassisStats.supplierFuel.maxReliablity;
+			baseValue -= performanceModFuel; // season start value allready includes fuel modifier
 		}
-		return text;
+
+		// create tooltip
+		string tooltip = string.Empty;
+		StringVariableParser.ordinalNumberString = baseValue.ToString("##0%"); // add base value to buffer
+		tooltip += Localisation.LocaliseID("PSG_10010514", null); // add base string
+		StringVariableParser.ordinalNumberString = engineerMod.ToString("##0%"); // add engineer mod value to buffer
+		tooltip += "\n" + "+ " + Localisation.LocaliseID("PSG_10010515", null); // add engineer mod string
+		if (Math.Round(componentMod, 2) != 0f) {
+			tooltip += "\n";
+			if (componentMod > 0)
+				tooltip += "+ ";
+			else
+				tooltip += "- ";
+			StringVariableParser.ordinalNumberString = Math.Abs(componentMod).ToString("##0%"); // add compont mod value to buffer
+			tooltip += Localisation.LocaliseID("PSG_10010516", null); // add component string
+		}
+		if (Math.Round(performanceModFuel, 2) != 0f) {
+			tooltip += "\n";
+			if (performanceModFuel > 0)
+				tooltip += "+ ";
+			else
+				tooltip += "- ";
+			StringVariableParser.ordinalNumberString = Math.Abs(performanceModFuel).ToString("##0%"); // add fuel mod value to buffer
+			tooltip += Localisation.LocaliseID("PSG_17550000", null); // add fuel string
+		}
+
+		return tooltip;
 	}
 
 	private void UpdatePartBuiltAchievements()
