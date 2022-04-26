@@ -99,73 +99,79 @@ public class RaceDirector : InstanceCounter
 		{
 			return;
 		}
-		RacingVehicle racingVehicle = inVehicle as RacingVehicle;
-		RacingVehicle racingVehicle2 = inObstacle as RacingVehicle;
-		if (racingVehicle == null || racingVehicle2 == null)
+		RacingVehicle vehicle = inVehicle as RacingVehicle;
+		RacingVehicle obstacle = inObstacle as RacingVehicle;
+		if (vehicle == null || obstacle == null)
 		{
 			return;
 		}
-		if (inObstacle == inVehicle.pathController.vehicleAheadOnPath)
-		{
-			if (racingVehicle.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart)
-			{
-				racingVehicle.car.OnCollision(CarPart.PartType.FrontWing);
-				if (!racingVehicle.behaviourManager.isOutOfRace || RandomUtility.GetRandom01() < 0.02f)
-				{
-					this.mPenaltyDirector.ApplyPenaltyIfViable(racingVehicle, Penalty.PenaltyCause.Collision);
-				}
-			}
-			if (racingVehicle2.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart && !racingVehicle2.behaviourManager.isOutOfRace)
-			{
-				racingVehicle2.car.OnCollision(CarPart.PartType.RearWing);
-			}
-			racingVehicle2.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
-			racingVehicle.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
-			CommentaryManager.SendComment(racingVehicle, Comment.CommentType.Collision, new object[]
-			{
-				racingVehicle.driver,
-				racingVehicle2.driver
-			});
+
+		// calculate damage on main vehicle (30% wings, 10% suspension, 60% tyres)
+		float damageType = RandomUtility.GetRandom01();
+		if (damageType < 0.3f) {
+			if (inObstacle == inVehicle.pathController.vehicleAheadOnPath)
+				vehicle.car.OnCollision(CarPart.PartType.FrontWing);
+			else
+				vehicle.car.OnCollision(CarPart.PartType.RearWing);
 		}
-		else if (inObstacle == inVehicle.pathController.vehicleBehindOnPath)
-		{
-			if (racingVehicle.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart)
-			{
-				racingVehicle.car.OnCollision(CarPart.PartType.RearWing);
-				if (!racingVehicle.behaviourManager.isOutOfRace || RandomUtility.GetRandom01() < 0.02f)
-				{
-					this.mPenaltyDirector.ApplyPenaltyIfViable(racingVehicle, Penalty.PenaltyCause.Collision);
-				}
-			}
-			if (racingVehicle2.behaviourManager.currentBehaviour.behaviourType != AIBehaviourStateManager.Behaviour.RaceStart)
-			{
-				racingVehicle2.car.OnCollision(CarPart.PartType.FrontWing);
-			}
-			racingVehicle2.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
-			racingVehicle.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
-			CommentaryManager.SendComment(racingVehicle, Comment.CommentType.Collision, new object[]
-			{
-				racingVehicle.driver,
-				racingVehicle2.driver
-			});
+		else if (damageType < 0.4f) {
+			vehicle.car.OnCollision(CarPart.PartType.Suspension);
 		}
-		racingVehicle.sessionData.crashVictim = racingVehicle2.driver;
-		racingVehicle.sessionData.driverCausedCrash = true;
-		if (racingVehicle.standingsPosition == 1)
-		{
-			racingVehicle.sessionData.crashedWhenInFirstPlace = true;
+		else {
+			TyreSet vehicleTyreSet = vehicle.setup.tyreSet;
+			float tyreDamage = 0.2f - (0.2f * RandomUtility.GetRandom01()); // 20%-40% condition loss
+			vehicle.setup.tyreSet.SetCondition(vehicle.setup.tyreSet.GetCondition() - tyreDamage);
 		}
-		racingVehicle2.sessionData.crashDriver = racingVehicle.driver;
-		racingVehicle2.sessionData.driverCrashedInto = true;
-		if (racingVehicle.isPlayerDriver)
-		{
-			Game.instance.sessionManager.raceDirector.sessionSimSpeedDirector.SlowDownForEvent(SessionSimSpeedDirector.SlowdownEvents.PlayerDriverCollision, racingVehicle);
-			racingVehicle.teamRadio.GetRadioMessage<RadioMessageCollision>().SendMessageCollisionCause(racingVehicle2);
+
+		// calculate damage on obstacle vehicle (same as main vehicle)
+		damageType = RandomUtility.GetRandom01();
+		if (damageType < 0.3f) {
+			if (inObstacle == inVehicle.pathController.vehicleAheadOnPath)
+				obstacle.car.OnCollision(CarPart.PartType.RearWing);
+			else
+				obstacle.car.OnCollision(CarPart.PartType.FrontWing);
 		}
-		if (racingVehicle2.isPlayerDriver)
+		else if (damageType < 0.4f) {
+			obstacle.car.OnCollision(CarPart.PartType.Suspension);
+		}
+		else {
+			TyreSet vehicleTyreSet = obstacle.setup.tyreSet;
+			float tyreDamage = 0.2f - (0.2f * RandomUtility.GetRandom01()); // 20%-40% condition loss
+			obstacle.setup.tyreSet.SetCondition(obstacle.setup.tyreSet.GetCondition() - tyreDamage);
+		}
+
+		// check for time penalty
+		if (!vehicle.behaviourManager.isOutOfRace || RandomUtility.GetRandom01() < 0.02f)
 		{
-			Game.instance.sessionManager.raceDirector.sessionSimSpeedDirector.SlowDownForEvent(SessionSimSpeedDirector.SlowdownEvents.PlayerDriverCollision, racingVehicle);
-			racingVehicle2.teamRadio.GetRadioMessage<RadioMessageCollision>().SendMessageCollisionVictim(racingVehicle);
+			this.mPenaltyDirector.ApplyPenaltyIfViable(vehicle, Penalty.PenaltyCause.Collision);
+		}
+
+		// create race event and commentary
+		obstacle.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
+		vehicle.timer.currentLap.AddEvent(LapDetailsData.LapEvents.Collision);
+		CommentaryManager.SendComment(vehicle, Comment.CommentType.Collision, new object[]
+		{
+			vehicle.driver,
+			obstacle.driver
+		});
+
+		vehicle.sessionData.crashVictim = obstacle.driver;
+		vehicle.sessionData.driverCausedCrash = true;
+		if (vehicle.standingsPosition == 1)
+		{
+			vehicle.sessionData.crashedWhenInFirstPlace = true;
+		}
+		obstacle.sessionData.crashDriver = vehicle.driver;
+		obstacle.sessionData.driverCrashedInto = true;
+		if (vehicle.isPlayerDriver)
+		{
+			Game.instance.sessionManager.raceDirector.sessionSimSpeedDirector.SlowDownForEvent(SessionSimSpeedDirector.SlowdownEvents.PlayerDriverCollision, vehicle);
+			vehicle.teamRadio.GetRadioMessage<RadioMessageCollision>().SendMessageCollisionCause(obstacle);
+		}
+		if (obstacle.isPlayerDriver)
+		{
+			Game.instance.sessionManager.raceDirector.sessionSimSpeedDirector.SlowDownForEvent(SessionSimSpeedDirector.SlowdownEvents.PlayerDriverCollision, vehicle);
+			obstacle.teamRadio.GetRadioMessage<RadioMessageCollision>().SendMessageCollisionVictim(vehicle);
 		}
 	}
 
