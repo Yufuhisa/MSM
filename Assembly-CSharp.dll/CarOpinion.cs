@@ -422,15 +422,15 @@ public class CarOpinion
 		switch (inHappiness)
 		{
 		case CarOpinion.Happiness.Angry:
-			return -0.1f;
-		case CarOpinion.Happiness.Unhappy:
 			return -0.05f;
+		case CarOpinion.Happiness.Unhappy:
+			return -0.025f;
 		case CarOpinion.Happiness.Content:
 			return 0f;
 		case CarOpinion.Happiness.Happy:
-			return 0.05f;
+			return 0.025f;
 		case CarOpinion.Happiness.Delighted:
-			return 0.1f;
+			return 0.05f;
 		default:
 			return 0f;
 		}
@@ -457,9 +457,9 @@ public class CarOpinion
 
 	private float mAgainstOtherCarMoraleHit;
 
-	private readonly float mRandomOverallMoraleHitModifier = (float)RandomUtility.GetRandomInc(-2, 2);
+	private readonly float mRandomOverallMoraleHitModifier = (float)RandomUtility.GetRandomInc(-1, 1);
 
-	private readonly float mRandomAgainstOtherCarMoraleHitModifier = (float)RandomUtility.GetRandomInc(-2, 2);
+	private readonly float mRandomAgainstOtherCarMoraleHitModifier = (float)RandomUtility.GetRandomInc(-1, 1);
 
 	public enum Happiness
 	{
