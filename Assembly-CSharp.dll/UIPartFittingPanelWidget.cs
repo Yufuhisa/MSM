@@ -17,7 +17,7 @@ public class UIPartFittingPanelWidget : MonoBehaviour
 	private void OnDropdownValueChanged()
 	{
 		scSoundManager.Instance.PlaySound(SoundID.Button_Select, 0f);
-		this.mCar.carManager.AutoFit(this.mCar, CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		this.mCar.carManager.AutofitBothCars();
 		this.RefreshScreen();
 	}
 

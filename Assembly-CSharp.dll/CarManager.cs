@@ -102,8 +102,8 @@ public class CarManager
 			this.mCar[j].Start(this);
 			this.mNextCar[j].Start(this);
 			this.mCar[j].ChassisStats = inChassisStats;
-			this.AutoFit(this.mCar[j], CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
 		}
+		this.AutofitBothCars();
 	}
 
 	public void NotifyIsOwnedByPlayer()
@@ -266,93 +266,7 @@ public class CarManager
 
 	public void AutoFit(Car inCar, CarManager.AutofitOptions inOption, CarManager.AutofitAvailabilityOption inAvailabilityOption)
 	{
-		this.UnfitAllParts(inCar);
-		bool useOnlyAvailableParts = (inAvailabilityOption == CarManager.AutofitAvailabilityOption.UnfitedParts);
-		float teamAggressiveness = mTeam.customAggressiveness;
-		CarPart bestPerformancePart;
-		CarPart bestReliabilityPart;
-
-		// calulcate reliability value the team strifes for
-		float teamMinReliability = GameStatsConstants.targetReliabilityMax - (GameStatsConstants.targetReliabilityMax - GameStatsConstants.targetReliabilityMin) * mTeam.customAggressiveness;
-
-		// find best part for all part types
-		CarPart.PartType[] partType = CarPart.GetPartType(this.mTeam.championship.series, false);
-		for (int i = 0; i < partType.Length; i++)
-		{
-			// get available parts for part type
-			List<CarPart> list = this.partInventory.GetPartInventory(partType[i]);
-
-			bestPerformancePart = null;
-			bestReliabilityPart = null;
-
-			for (int j = 0; j < list.Count; j++)
-			{
-				if (this.mTeam.championship.championshipID == 0) {
-					global::Debug.LogErrorFormat("AutoFit Team {0} TileList MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
-						this.mTeam.GetShortName()
-						, list[j].stats.statWithPerformance.ToString("##0")
-						, (list[j].stats.stat + list[j].stats.maxPerformance).ToString("##0")
-						, (list[j].stats.reliability * 100f).ToString("##0")
-						, (list[j].stats.GetMaxReliability() * 100f).ToString("##0")
-						, list[j].GetPartType()
-						, list[j].stats.level
-						, teamMinReliability
-					});
-				}
-
-				// skip used parts if only fit available option is true
-				if (useOnlyAvailableParts && list[j].isFitted)
-					continue;
-
-				// if part has teamMinReliability check for bestPerformancePart
-				if (list[j].reliability >= teamMinReliability)
-				{
-					if (bestPerformancePart == null || list[j].stats.statWithPerformance > bestPerformancePart.stats.statWithPerformance)
-						bestPerformancePart = list[j];
-				}
-				// check for bestReliabilityPart
-				if (bestReliabilityPart == null || list[j].reliability > bestReliabilityPart.reliability)
-					bestReliabilityPart = list[j];
-			}
-				if (this.mTeam.championship.championshipID == 0) {
-					if (bestPerformancePart == null)
-						global::Debug.LogErrorFormat("AutoFit Team {0} bestPerf: not found", new object[] {
-							this.mTeam.GetShortName()
-						});
-					else
-						global::Debug.LogErrorFormat("AutoFit Team {0} bestPerf: MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
-							this.mTeam.GetShortName()
-							, bestPerformancePart.stats.statWithPerformance.ToString("##0")
-							, (bestPerformancePart.stats.stat + bestPerformancePart.stats.maxPerformance).ToString("##0")
-							, (bestPerformancePart.stats.reliability * 100f).ToString("##0")
-							, (bestPerformancePart.stats.GetMaxReliability() * 100f).ToString("##0")
-							, bestPerformancePart.GetPartType()
-							, bestPerformancePart.stats.level
-							, teamMinReliability
-						});
-					if (bestReliabilityPart == null)
-						global::Debug.LogErrorFormat("AutoFit Team {0} bestRel: not found", new object[] {
-							this.mTeam.GetShortName()
-						});
-					else
-						global::Debug.LogErrorFormat("AutoFit Team {0} bestRel: MinRel {7} Part {5} Stats: Tier {6} Performance {1}/{2}, Reliability {3}/{4}", new object[] {
-							this.mTeam.GetShortName()
-							, bestReliabilityPart.stats.statWithPerformance.ToString("##0")
-							, (bestReliabilityPart.stats.stat + bestReliabilityPart.stats.maxPerformance).ToString("##0")
-							, (bestReliabilityPart.stats.reliability * 100f).ToString("##0")
-							, (bestReliabilityPart.stats.GetMaxReliability() * 100f).ToString("##0")
-							, bestReliabilityPart.GetPartType()
-							, bestReliabilityPart.stats.level
-							, teamMinReliability
-						});
-				}
-
-			// fit bestPerformancePart if available, otherwise bestReliabilityPart
-			if (bestPerformancePart != null)
-				inCar.FitPart(bestPerformancePart);
-			else if (bestReliabilityPart != null)
-				inCar.FitPart(bestReliabilityPart);
-		}
+		// outdated and replaced by AutofitBothCars()
 	}
 
 	public bool PartHasBestStatOfTeam(CarPart inPart, CarStats.StatType inStat)
@@ -638,8 +552,8 @@ public class CarManager
 				carPart.PostStatsSetup(this.mTeam.championship);
 			}
 		}
-		this.AutoFit(this.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		this.AutoFit(this.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		this.AutofitBothCars();
+	}
 	
 	private CarPart GetBestPartOfType(CarPart.PartType inPartType) {
 
@@ -857,8 +771,7 @@ public class CarManager
 			}
 			this.partInventory.AddPart(carPart);
 		}
-		this.AutoFit(this.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		this.AutoFit(this.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		this.AutofitBothCars();
 	}
 
 	public void SetPartBasicStats(CarPart inPart)

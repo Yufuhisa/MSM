@@ -125,13 +125,9 @@ public class CarPartFittingScreen : UIScreen
 		Action inConfirmAction = delegate()
 		{
 			CarManager carManager = Game.instance.player.team.carManager;
-			if (!carManager.CarReadyForEvent(carManager.GetCar(0)))
+			if (!carManager.CarReadyForEvent(carManager.GetCar(0)) || !carManager.CarReadyForEvent(carManager.GetCar(1)))
 			{
-				carManager.AutoFit(carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-			}
-			if (!carManager.CarReadyForEvent(carManager.GetCar(1)))
-			{
-				carManager.AutoFit(carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+				carManager.AutofitBothCars();
 			}
 			this.needsPlayerConfirmation = !Game.instance.player.team.carManager.BothCarsReadyForEvent();
 			if (inAction != null)

@@ -400,12 +400,7 @@ public class CreateTeamManager
 				}
 			}
 		}
-		Car car = carManager.GetCar(0);
-		Car car2 = carManager.GetCar(1);
-		carManager.UnfitAllParts(car);
-		carManager.UnfitAllParts(car2);
-		carManager.AutoFit(car, CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		carManager.AutoFit(car2, CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		carManager.AutofitBothCars();
 		carManager.carPartDesign.SetSeasonStartingStats();
 	}
 

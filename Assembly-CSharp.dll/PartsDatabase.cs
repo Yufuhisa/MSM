@@ -49,8 +49,7 @@ public class PartsDatabase
 		for (int l = 0; l < teamManager.count; l++)
 		{
 			Team entity2 = teamManager.GetEntity(l);
-			entity2.carManager.AutoFit(entity2.carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.AllParts);
-			entity2.carManager.AutoFit(entity2.carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+			entity2.carManager.AutofitBothCars();
 			entity2.carManager.carPartDesign.SetSeasonStartingStats();
 		}
 	}

@@ -77,8 +77,7 @@ public class ChampionshipRules : Entity, fsISerializationCallbacks
 		partInventory.DestroyParts(inPartType);
 		partInventory.AddPart(this.GetDefaultPart(inPartType, inTeam));
 		partInventory.AddPart(this.GetDefaultPart(inPartType, inTeam));
-		carManager.AutoFit(carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		carManager.AutoFit(carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		carManager.AutofitBothCars();
 	}
 
 	private CarPart GetDefaultPart(CarPart.PartType inType, Team inTeam)
@@ -129,8 +128,7 @@ public class ChampionshipRules : Entity, fsISerializationCallbacks
 			partInventory.AddPart(this.GetSpecPart(this.specParts[i], inTeam));
 			partInventory.AddPart(this.GetSpecPart(this.specParts[i], inTeam));
 		}
-		carManager.AutoFit(carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
-		carManager.AutoFit(carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		carManager.AutofitBothCars();
 	}
 
 	private CarPart GetSpecPart(CarPart.PartType inType, Team inTeam)

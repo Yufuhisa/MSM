@@ -816,8 +816,7 @@ public class TeamAIController
 
 	public void FitPartsOnCars()
 	{
-		this.mTeam.carManager.AutoFit(this.mTeam.carManager.GetCar(0), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.AllParts);
-		this.mTeam.carManager.AutoFit(this.mTeam.carManager.GetCar(1), CarManager.AutofitOptions.Performance, CarManager.AutofitAvailabilityOption.UnfitedParts);
+		this.mTeam.carManager.AutofitBothCars();
 	}
 
 	private CarPart GetSuitablePartForCar(CarManager inCarManager, CarPart inPartToReplace, float inMinReliability)
